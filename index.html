@@ -1101,7 +1101,7 @@ html, body {
       </div>
     </div>
     <div class="lb-qr-wrap">
-      <div class="lb-qr-title">📲 Share the challenge</div>
+      <div class="lb-qr-title">📲 Get the challenge</div>
       <div id="qrcode"></div>
     </div>
     <div class="lb-next-badge" id="lbNextBadge"></div>
@@ -2184,7 +2184,7 @@ function showLeaderboardPage() {
   const lbNext = document.getElementById('lbNextBadge');
   if (nextBadge) {
     const needed = nextBadge[0] - words;
-    lbNext.innerHTML = `Speak <strong>${needed} more word${needed!==1?'s':''} flow</strong> to unlock ${nextBadge[1]} <em>${nextBadge[2]}</em>`;
+    lbNext.innerHTML = `Speak <strong>${needed} more word${needed!==1?'s':''} in flow</strong> to unlock <strong>${nextBadge[1]} <em>${nextBadge[2]}</em></strong>`;
   } else {
     lbNext.innerHTML = `🏆 You've reached the highest rank: <strong>Voice Legend!</strong>`;
   }
