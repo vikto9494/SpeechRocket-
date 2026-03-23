@@ -159,7 +159,7 @@ html, body {
 }
 .start-logo {
   font-family: var(--font-display);
-  font-size: clamp(28px, 7vw, 40px);
+  font-size: clamp(26px, 7vw, 40px);
   font-weight: 900;
   color: var(--text-light);
   letter-spacing: 2px;
@@ -1381,6 +1381,8 @@ const STATE = {
   listeningEnabled: false, // true ONLY after TTS has finished speaking — prevents TTS output triggering recognition
   wordGeneration: 0,       // incremented on each nextWord / skip — used to invalidate stale timers
   paused: false,
+  fallStartedAt: 0,        // timestamp when fallTimer was started — used to calc remaining time on resume
+  fallTimeRemaining: 0,    // ms remaining on fallTimer when paused
 };
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -1677,6 +1679,8 @@ function nextWord() {
     bubble.classList.add('falling');
 
     // Game over when bubble reaches the rocket
+    STATE.fallStartedAt = Date.now();
+    STATE.fallTimeRemaining = STATE.fallDuration;
     STATE.fallTimer = setTimeout(() => {
       if (STATE.wordGeneration !== gen) return;
       if (!STATE.wordCorrect && STATE.isPlaying && !STATE.paused) {
@@ -1746,23 +1750,33 @@ function wordCorrect(accuracy) {
 }
 
 function wordMissed() {
+  if (!STATE.isPlaying) return; // prevent double-trigger
   STATE.isPlaying = false;
   STATE.wordActive = false;
   STATE.listeningEnabled = false;
+  STATE.paused = false;
   STATE.failedWord = STATE.currentTarget;
 
+  clearTimeout(STATE.fallTimer);
   clearTimeout(ttsResumeTimer);
   if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   const bubble = document.getElementById('wordBubble');
+  bubble.style.animationPlayState = '';
   bubble.classList.remove('falling');
   bubble.classList.add('missed');
+
+  // Reset listening wave animation
+  document.querySelectorAll('.listen-waves span').forEach(s => {
+    s.style.animationPlayState = '';
+  });
 
   // Crash animation
   document.getElementById('rocketWrapper').classList.add('rocket-crash');
   playCrashSound();
 
   document.getElementById('listenHud').style.display = 'none';
+  document.getElementById('pauseBtn').innerHTML = '&#9208;';
   stopRecognition();
 
   gaEvent('result', {
@@ -1798,8 +1812,12 @@ function cancelCurrentWord() {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   const bubble = document.getElementById('wordBubble');
+  bubble.style.animationPlayState = '';
   bubble.style.display = 'none';
   bubble.className = 'word-bubble';
+  document.querySelectorAll('.listen-waves span').forEach(s => {
+    s.style.animationPlayState = '';
+  });
   document.getElementById('listenHud').style.display = 'none';
 }
 
@@ -1848,14 +1866,24 @@ function togglePause() {
     // Pause
     STATE.paused = true;
     STATE.listeningEnabled = false;
+
+    // Calculate how much fall time remains
+    if (STATE.fallStartedAt > 0) {
+      const elapsed = Date.now() - STATE.fallStartedAt;
+      STATE.fallTimeRemaining = Math.max(0, STATE.fallTimeRemaining - elapsed);
+    }
     clearTimeout(STATE.fallTimer);
     clearTimeout(ttsResumeTimer);
     if (window.speechSynthesis) window.speechSynthesis.pause();
 
+    // Freeze bubble and listening animations
     const bubble = document.getElementById('wordBubble');
     if (bubble.classList.contains('falling')) {
       bubble.style.animationPlayState = 'paused';
     }
+    document.querySelectorAll('.listen-waves span').forEach(s => {
+      s.style.animationPlayState = 'paused';
+    });
 
     document.getElementById('pauseBtn').innerHTML = '&#9654;';
     document.getElementById('listenLabel').textContent = 'paused';
@@ -1864,25 +1892,31 @@ function togglePause() {
     STATE.paused = false;
     if (window.speechSynthesis) window.speechSynthesis.resume();
 
+    // Unfreeze animations
     const bubble = document.getElementById('wordBubble');
     bubble.style.animationPlayState = 'running';
+    document.querySelectorAll('.listen-waves span').forEach(s => {
+      s.style.animationPlayState = 'running';
+    });
 
     document.getElementById('pauseBtn').innerHTML = '&#9208;';
 
     if (STATE.wordActive && !STATE.wordCorrect) {
-      // Word is still in play — ensure it's falling and restart its timer
-      const bubble = document.getElementById('wordBubble');
+      // Word is still in play — ensure it's falling
       if (!bubble.classList.contains('falling')) {
         bubble.classList.add('falling');
       }
       STATE.listeningEnabled = true;
+      // Use remaining time, not full duration
+      const remaining = Math.max(100, STATE.fallTimeRemaining);
+      STATE.fallStartedAt = Date.now();
       const gen = STATE.wordGeneration;
       STATE.fallTimer = setTimeout(() => {
         if (STATE.wordGeneration !== gen) return;
         if (!STATE.wordCorrect && STATE.isPlaying && !STATE.paused) {
           wordMissed();
         }
-      }, STATE.fallDuration);
+      }, remaining);
       document.getElementById('listenLabel').textContent = 'listening...';
     } else if (!STATE.wordActive) {
       // Paused between words — launch the next word
@@ -2112,7 +2146,6 @@ function showResultPage() {
 
   document.getElementById('resultWord').textContent = STATE.failedWord || '—';
   document.getElementById('resultScore').textContent = score.toLocaleString();
-  document.getElementById('resultMeters').textContent = STATE.meters.toLocaleString() + ' meters high';
   document.getElementById('statWords').textContent = STATE.correctCount;
   document.getElementById('statAccuracy').textContent = avg + '%';
   document.getElementById('statHeight').textContent = STATE.meters + 'm';
