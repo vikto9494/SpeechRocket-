@@ -918,7 +918,7 @@ html, body {
     <div class="start-rules">
       Say the words correctly to<br><strong>fly as far as possible</strong> 🚀
     </div>
-    <button class="btn-primary" id="startBtn">Start your flight 🚀</button>
+    <button class="btn-primary" id="startBtn">Start your flight</button>
     <div class="start-legal">
       By continuing, you agree to our
       <a href="https://inream.com/terms_of_service" target="_blank">Terms of Use</a>
@@ -1155,10 +1155,22 @@ const CONFIG = {
   ACCURACY_THRESHOLD_NORMAL: 65,   // threshold after first N words
   EARLY_WORD_COUNT: 2,             // how many words use the lower threshold
 
+  // Accuracy display jitter — displayed accuracy is randomized within this range below the raw value
+  // e.g. raw 100% → displayed 90–100%, raw 80% → displayed 72–80%
+  ACCURACY_JITTER_MAX: 10,         // max % subtracted from raw accuracy for display
+
+  // Tier sizes — how many items of each type before switching to the next tier
+  SINGLES_COUNT: 1,               // first N items are single words
+  PAIRS_COUNT: 2,                 // next N items are 2-word pairs, then full phrases
+
   // Falling speed (milliseconds for a word to travel top→rocket)
-  FALL_DURATION_INITIAL: 9500,     // ms — first word
+  FALL_DURATION_INITIAL: 9500,     // ms — first word (singles tier)
   FALL_DURATION_MIN: 3200,         // ms — fastest possible
-  FALL_DURATION_DECREASE: 180,     // ms reduction per correct word
+  FALL_DURATION_DECREASE: 180,     // ms reduction per correct word within a tier
+
+  // Tier transition — speed resets partially when moving to harder tiers
+  FALL_DURATION_PAIRS_RESET: 8000, // ms — fall duration resets to this when pairs tier starts
+  FALL_DURATION_FULL_RESET: 7000,  // ms — fall duration resets to this when full phrases tier starts
 
   // Scoring
   METERS_PER_WORD: 300,            // meters per correctly spoken word
@@ -1226,8 +1238,7 @@ const CONFIG = {
    Next 24 (13–36): broken into 2-word pairs
    Last 34 (37–70): presented as full phrases
 ═════════════════════════════════════════════════════════════════════ */
-const PHRASES = {
-  singles: [
+const PHRASES = [
     "The sun shines softly",
     "Don't doubt the deal",
     "Birds bring bright beauty",
@@ -1240,8 +1251,6 @@ const PHRASES = {
     "They thought that through",
     "Where were we whoa",
     "Wish when we walk",
-  ],
-  pairs: [
     "The cake came cold",
     "Never know the name",
     "Look left not late",
@@ -1266,8 +1275,6 @@ const PHRASES = {
     "The light looks lovely",
     "Stop the small snake",
     "He hopes she hears",
-  ],
-  full: [
     "Mind my missing mug",
     "The chair creaks clearly",
     "Open the old oven",
@@ -1301,9 +1308,8 @@ const PHRASES = {
     "Lamb limb lame lime",
     "Thank tank think thunk",
     "Rice rise rays rose",
-    "Cough calf cave curve",
-  ]
-};
+    "Cough calf cave curve"
+  ];
 
 /* ═════════════════════════════════════════════════════════════════════
    SECTION 3: GAME STATE
@@ -1348,26 +1354,42 @@ function cleanPhrase(phrase) {
 }
 
 function buildSequence() {
+  const allPhrases = shuffle([...PHRASES]);
   const seq = [];
+  let phraseIdx = 0;
 
-  // Singles: break each phrase into individual words
-  for (const phrase of shuffle(PHRASES.singles)) {
-    const words = cleanPhrase(phrase).split(' ').filter(Boolean);
-    seq.push(...words);
+  // Helper: get next phrase (cycling if exhausted, reshuffle)
+  function nextPhrase() {
+    if (phraseIdx >= allPhrases.length) {
+      const reshuffled = shuffle([...PHRASES]);
+      allPhrases.push(...reshuffled);
+    }
+    return cleanPhrase(allPhrases[phraseIdx++]);
   }
 
-  // Pairs: break each phrase into 2-word chunks
-  for (const phrase of shuffle(PHRASES.pairs)) {
-    const words = cleanPhrase(phrase).split(' ').filter(Boolean);
-    for (let i = 0; i < words.length; i += 2) {
-      if (i + 1 < words.length) seq.push(words[i] + ' ' + words[i+1]);
-      else seq.push(words[i]);
+  // Tier 1 — Singles: pick phrases and extract individual words until we have SINGLES_COUNT
+  while (seq.length < CONFIG.SINGLES_COUNT) {
+    const words = nextPhrase().split(' ').filter(Boolean);
+    for (const w of words) {
+      seq.push(w);
+      if (seq.length >= CONFIG.SINGLES_COUNT) break;
     }
   }
 
-  // Full: use entire phrase
-  for (const phrase of shuffle(PHRASES.full)) {
-    seq.push(cleanPhrase(phrase));
+  // Tier 2 — Pairs: pick phrases and extract 2-word chunks until we have PAIRS_COUNT more
+  const pairsTarget = CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT;
+  while (seq.length < pairsTarget) {
+    const words = nextPhrase().split(' ').filter(Boolean);
+    for (let i = 0; i < words.length; i += 2) {
+      if (i + 1 < words.length) seq.push(words[i] + ' ' + words[i + 1]);
+      else seq.push(words[i]);
+      if (seq.length >= pairsTarget) break;
+    }
+  }
+
+  // Tier 3 — Full phrases: use remaining shuffled phrases as whole units
+  while (phraseIdx < allPhrases.length) {
+    seq.push(nextPhrase());
   }
 
   return seq;
@@ -1617,14 +1639,29 @@ function wordCorrect(accuracy) {
   // Update state
   STATE.correctCount++;
   STATE.meters = STATE.correctCount * CONFIG.METERS_PER_WORD;
-  STATE.accuracySum += accuracy;
+
+  // Jitter the displayed accuracy — subtract a random amount (0 to JITTER_MAX) from raw value
+  const jitter = Math.random() * CONFIG.ACCURACY_JITTER_MAX;
+  const displayAccuracy = Math.max(1, Math.round(accuracy - jitter));
+
+  STATE.accuracySum += displayAccuracy;
   STATE.accuracyCount++;
 
-  // Decrease fall speed
-  STATE.fallDuration = Math.max(
-    CONFIG.FALL_DURATION_MIN,
-    STATE.fallDuration - CONFIG.FALL_DURATION_DECREASE
-  );
+  // Tier transition speed resets
+  const prevCount = STATE.correctCount - 1;
+  if (prevCount < CONFIG.SINGLES_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT) {
+    // Entering pairs tier — slow down for harder content
+    STATE.fallDuration = CONFIG.FALL_DURATION_PAIRS_RESET;
+  } else if (prevCount < CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT) {
+    // Entering full phrases tier — slow down for harder content
+    STATE.fallDuration = CONFIG.FALL_DURATION_FULL_RESET;
+  } else {
+    // Normal acceleration within a tier
+    STATE.fallDuration = Math.max(
+      CONFIG.FALL_DURATION_MIN,
+      STATE.fallDuration - CONFIG.FALL_DURATION_DECREASE
+    );
+  }
 
   // Increase cloud speed
   STATE.cloudDuration = Math.max(
@@ -1637,9 +1674,9 @@ function wordCorrect(accuracy) {
   const bubble = document.getElementById('wordBubble');
   bubble.classList.remove('falling');
   bubble.classList.add('correct');
-  document.getElementById('listenLabel').textContent = Math.round(accuracy) + '% ✓';
+  document.getElementById('listenLabel').textContent = displayAccuracy + '% ✓';
 
-  showAccuracyBadge(Math.round(accuracy));
+  showAccuracyBadge(displayAccuracy);
   playSuccessSound();
   updateMeterDisplay();
 
