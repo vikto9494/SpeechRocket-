@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║              SPEECH ROCKET — by Inream (inream.com)             ║
+  ║   © 2024 Inream. All rights reserved.                           ║
+  ║   This game is the intellectual property of Inream.            ║
+  ║   You may play and share it with friends freely.               ║
+  ║   Commercial use, resale, or rebranding requires written       ║
+  ║   permission from Inream and must credit Inream as the author  ║
+  ║   on the title page.                                           ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d1b4b">
+  <title>Speech Rocket 🚀 | English Pronunciation Training</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════ */
+:root {
+  --sky-top: #0d1b4b;
+  --sky-mid: #1565C0;
+  --sky-bot: #42A5F5;
+  --sky-dawn: #90CAF9;
+  --cloud: rgba(255,255,255,0.9);
+  --rocket-fire: #FF6B35;
+  --rocket-body: #E3F2FD;
+  --accent: #FF6B35;
+  --accent2: #FFC107;
+  --success: #69F0AE;
+  --danger: #FF5252;
+  --bubble-bg: rgba(255,255,255,0.95);
+  --bubble-border: #1565C0;
+  --text-dark: #0d1b4b;
+  --text-light: #ffffff;
+  --btn-primary: linear-gradient(135deg, #FF6B35, #FF8F00);
+  --btn-secondary: rgba(255,255,255,0.15);
+  --shadow: 0 8px 32px rgba(13,27,75,0.4);
+  --radius: 18px;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--sky-top);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════════════ */
+.page {
+  position: fixed; inset: 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.page.active { display: flex; }
+
+/* ═══════════════════════════════════════════════════════
+   SKY BACKGROUND (shared)
+═══════════════════════════════════════════════════════ */
+.sky-bg {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 50%, var(--sky-bot) 85%, var(--sky-dawn) 100%);
+  position: fixed; inset: 0; z-index: 0;
+}
+.stars {
+  position: fixed; inset: 0; z-index: 1;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 120px 120px, 60px 60px;
+  background-position: 0 0, 30px 30px;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity:0.6; } to { opacity:1; } }
+
+/* ═══════════════════════════════════════════════════════
+   CLOUDS
+═══════════════════════════════════════════════════════ */
+.cloud-layer { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.cloud {
+  position: absolute;
+  background: var(--cloud);
+  border-radius: 50px;
+  opacity: 0.85;
+  filter: blur(2px);
+}
+.cloud::before, .cloud::after {
+  content: ''; position: absolute;
+  background: var(--cloud);
+  border-radius: 50%;
+}
+.cloud-1 { width: 120px; height: 45px; left: 8%; }
+.cloud-1::before { width: 60px; height: 60px; top: -25px; left: 15px; }
+.cloud-1::after { width: 45px; height: 45px; top: -18px; left: 50px; }
+.cloud-2 { width: 90px; height: 35px; left: 55%; }
+.cloud-2::before { width: 50px; height: 50px; top: -22px; left: 10px; }
+.cloud-2::after { width: 35px; height: 35px; top: -15px; left: 40px; }
+.cloud-3 { width: 150px; height: 55px; left: 25%; }
+.cloud-3::before { width: 80px; height: 70px; top: -30px; left: 20px; }
+.cloud-3::after { width: 60px; height: 55px; top: -25px; left: 70px; }
+.cloud-4 { width: 100px; height: 38px; left: 72%; }
+.cloud-4::before { width: 55px; height: 55px; top: -22px; left: 12px; }
+.cloud-4::after { width: 40px; height: 40px; top: -18px; left: 48px; }
+.cloud-5 { width: 80px; height: 30px; left: 38%; }
+.cloud-5::before { width: 44px; height: 44px; top: -20px; left: 10px; }
+.cloud-5::after { width: 32px; height: 32px; top: -14px; left: 38px; }
+
+@keyframes cloudFall {
+  from { transform: translateY(-200px); }
+  to   { transform: translateY(calc(100vh + 200px)); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGE: START
+═══════════════════════════════════════════════════════ */
+#page-start {
+  justify-content: center;
+  padding: 20px;
+  z-index: 10;
+}
+.start-card {
+  position: relative; z-index: 5;
+  background: rgba(13,27,75,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 28px;
+  padding: 36px 28px 24px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.start-logo {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 7vw, 40px);
+  font-weight: 900;
+  color: var(--text-light);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 30px rgba(255,107,53,0.6);
+}
+.start-logo span { color: var(--accent); }
+.start-subtitle {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+}
+.rocket-hero {
+  margin: 0 auto 20px;
+  width: 80px; height: 130px;
+  position: relative;
+  animation: hover-bob 2.5s ease-in-out infinite;
+}
+@keyframes hover-bob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.start-rules {
+  font-size: 16px;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.55;
+  margin-bottom: 28px;
+  font-weight: 600;
+}
+.start-rules strong { color: var(--accent2); }
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--btn-primary);
+  border: none; border-radius: 14px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,107,53,0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+.btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 10px rgba(255,107,53,0.3); }
+.btn-secondary {
+  display: block;
+  width: 100%;
+  padding: 13px 24px;
+  background: var(--btn-secondary);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 14px;
+  color: rgba(255,255,255,0.88);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-appearance: none;
+  margin-top: 10px;
+}
+.btn-secondary:active { transform: scale(0.97); background: rgba(255,255,255,0.22); }
+.btn-boost {
+  display: block;
+  width: 100%;
+  padding: 13px 24px;
+  background: linear-gradient(135deg,rgba(100,181,246,0.25),rgba(30,144,255,0.3));
+  border: 1.5px solid rgba(100,181,246,0.4);
+  border-radius: 14px;
+  color: #90CAF9;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-appearance: none;
+  margin-top: 10px;
+}
+.btn-boost:active { transform: scale(0.97); }
+.btn-label-small {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 3px;
+}
+.start-legal {
+  margin-top: 16px;
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.38);
+  line-height: 1.5;
+}
+.start-legal a { color: rgba(100,181,246,0.7); text-decoration: none; }
+.players-live {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+.players-live strong { color: var(--success); }
+.dot-live {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--success);
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.3);} }
+
+/* ═══════════════════════════════════════════════════════
+   PAGE: GAMEPLAY
+═══════════════════════════════════════════════════════ */
+#page-gameplay {
+  overflow: hidden;
+  z-index: 10;
+  /* Contain all absolutely-positioned children */
+  position: fixed;
+}
+.gameplay-hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px 20px 10px;
+  background: linear-gradient(180deg,rgba(13,27,75,0.9) 0%,transparent 100%);
+}
+.meter-display {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5vw, 26px);
+  font-weight: 700;
+  color: var(--text-light);
+  text-shadow: 0 0 20px rgba(255,193,7,0.5);
+  letter-spacing: 1px;
+}
+.meter-display span { color: var(--accent2); }
+
+.word-area {
+  position: absolute; inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  overflow: hidden;
+}
+.word-bubble {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bubble-bg);
+  border: 2.5px solid var(--bubble-border);
+  border-radius: 20px;
+  padding: 12px 22px;
+  font-family: var(--font-body);
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: 800;
+  color: var(--text-dark);
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  top: -80px;
+  will-change: transform;
+  text-align: center;
+  min-width: 120px;
+  max-width: 85vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.word-bubble.falling {
+  animation: fallDown var(--fall-dur, 9s) linear forwards;
+}
+.word-bubble.correct {
+  background: linear-gradient(135deg,#e8f5e9,#c8e6c9);
+  border-color: #4CAF50;
+  animation: floatAway 0.5s ease-in forwards;
+}
+.word-bubble.missed {
+  background: linear-gradient(135deg,#ffebee,#ffcdd2);
+  border-color: var(--danger);
+}
+@keyframes fallDown {
+  from { top: -80px; }
+  to   { top: calc(100vh - 130px); }
+}
+@keyframes floatAway {
+  to { transform: translateX(-50%) scale(1.15); opacity: 0; }
+}
+
+.accuracy-badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg,#0d1b4b,#1565C0);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 30px;
+  opacity: 0;
+  pointer-events: none;
+  top: 100px;
+  transition: none;
+  white-space: nowrap;
+}
+.accuracy-badge.show {
+  animation: badgePop 1.2s ease forwards;
+}
+@keyframes badgePop {
+  0%  { opacity:0; transform:translateX(-50%) scale(0.7); }
+  20% { opacity:1; transform:translateX(-50%) scale(1.1); }
+  80% { opacity:1; transform:translateX(-50%) scale(1); }
+  100%{ opacity:0; transform:translateX(-50%) scale(0.9); }
+}
+
+/* Listening indicator */
+.listen-hud {
+  position: absolute;
+  bottom: 105px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.listen-label {
+  background: rgba(13,27,75,0.88);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.listen-waves {
+  display: flex; align-items: center; gap: 4px; height: 24px;
+}
+.listen-waves span {
+  display: block;
+  width: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: wave 1s ease-in-out infinite;
+}
+.listen-waves span:nth-child(1){ height:6px; animation-delay:0s; }
+.listen-waves span:nth-child(2){ height:14px; animation-delay:0.1s; }
+.listen-waves span:nth-child(3){ height:20px; animation-delay:0.2s; }
+.listen-waves span:nth-child(4){ height:14px; animation-delay:0.3s; }
+.listen-waves span:nth-child(5){ height:6px; animation-delay:0.4s; }
+@keyframes wave {
+  0%,100%{ transform:scaleY(0.5); opacity:0.6; }
+  50%{ transform:scaleY(1); opacity:1; }
+}
+
+/* Rocket area */
+.rocket-area {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 8px;
+}
+.rocket-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.rocket-wrapper {
+  width: 70px;
+  height: 110px;
+  position: relative;
+  filter: drop-shadow(0 0 15px rgba(255,107,53,0.6));
+}
+.rocket-crash { animation: crashShake 0.5s ease; }
+@keyframes crashShake {
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-8px) rotate(-5deg);}
+  40%{transform:translateX(8px) rotate(5deg);}
+  60%{transform:translateX(-6px) rotate(-3deg);}
+  80%{transform:translateX(6px) rotate(3deg);}
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGE: RESULT
+═══════════════════════════════════════════════════════ */
+#page-result {
+  background: linear-gradient(160deg,#0d1b4b 0%,#1a237e 50%,#0d1b4b 100%);
+  padding: 0 20px 40px;
+  justify-content: flex-start;
+  z-index: 30;
+}
+.result-inner {
+  max-width: 420px;
+  width: 100%;
+  padding-top: 20px;
+  text-align: center;
+}
+.result-stopped-by {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 12px;
+}
+.result-word {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 6vw, 34px);
+  font-weight: 900;
+  color: var(--danger);
+  text-shadow: 0 0 30px rgba(255,82,82,0.5);
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background: rgba(255,82,82,0.1);
+  border: 1.5px solid rgba(255,82,82,0.3);
+  border-radius: 14px;
+  display: inline-block;
+  animation: pulseRed 2s infinite;
+}
+@keyframes pulseRed { 0%,100%{box-shadow:0 0 0 rgba(255,82,82,0);} 50%{box-shadow:0 0 20px rgba(255,82,82,0.3);} }
+.result-score-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.result-score-label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.result-score-value {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 9vw, 58px);
+  font-weight: 900;
+  color: var(--accent2);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.result-score-sub { font-size: 13px; color: rgba(255,255,255,0.5); }
+.result-new-best {
+  display: inline-block;
+  background: linear-gradient(135deg,var(--accent),var(--accent2));
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+  animation: shinePulse 1.5s ease infinite;
+}
+@keyframes shinePulse { 0%,100%{box-shadow:0 0 0 rgba(255,193,7,0);} 50%{box-shadow:0 0 20px rgba(255,193,7,0.5);} }
+.result-stats {
+  display: flex; gap: 12px; margin-bottom: 20px;
+}
+.result-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.result-stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; }
+.result-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.result-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+/* ═══════════════════════════════════════════════════════
+   PAGE: LEADERBOARD
+═══════════════════════════════════════════════════════ */
+#page-leaderboard {
+  background: linear-gradient(160deg,#0d1b4b 0%,#1565C0 60%,#0d1b4b 100%);
+  padding: 0 20px 40px;
+  z-index: 30;
+}
+.lb-inner {
+  max-width: 420px;
+  width: 100%;
+  padding-top: 20px;
+  text-align: center;
+}
+.lb-top-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5vw, 26px);
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.lb-top-title span { color: var(--accent2); }
+.lb-top-sub { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 20px; }
+.lb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  margin-bottom: 20px;
+}
+.lb-table td {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.06);
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+}
+.lb-table tr td:first-child { border-radius: 10px 0 0 10px; font-family: var(--font-display); font-size: 12px; color: rgba(255,255,255,0.4); }
+.lb-table tr td:last-child { border-radius: 0 10px 10px 0; text-align: right; font-weight: 700; font-family: var(--font-display); font-size: 15px; color: var(--accent2); }
+.lb-table tr.you-row td {
+  background: rgba(255,107,53,0.2);
+  border-top: 1.5px solid rgba(255,107,53,0.5);
+  border-bottom: 1.5px solid rgba(255,107,53,0.5);
+  color: #fff;
+}
+.lb-table tr.you-row td:first-child { border-left: 1.5px solid rgba(255,107,53,0.5); }
+.lb-table tr.you-row td:last-child { border-right: 1.5px solid rgba(255,107,53,0.5); color: var(--accent); }
+.lb-name { font-weight: 700; }
+.lb-achievement {
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,193,7,0.3);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.lb-achievement-icon { font-size: 32px; flex-shrink: 0; }
+.lb-achievement-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--accent2); }
+.lb-achievement-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.lb-qr-wrap {
+  background: rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.lb-qr-title { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+#qrcode { display: inline-block; background: #fff; padding: 8px; border-radius: 10px; }
+.lb-next-badge {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+.lb-next-badge strong { color: var(--accent2); }
+
+/* ═══════════════════════════════════════════════════════
+   PAGE: SUPPORT
+═══════════════════════════════════════════════════════ */
+#page-support {
+  background: linear-gradient(160deg,#0d1b4b 0%,#1a237e 50%,#0d1b4b 100%);
+  padding: 0 20px 40px;
+  z-index: 30;
+}
+.sup-inner {
+  max-width: 420px;
+  width: 100%;
+  padding-top: 16px;
+}
+.sup-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.sup-title span { color: var(--accent2); }
+.sup-option {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.sup-option-header {
+  font-weight: 800; font-size: 15px; color: #fff; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sup-option-num {
+  background: var(--accent);
+  color: #fff; font-size: 12px; font-weight: 800;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sup-option-desc { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+.sup-share-link {
+  display: flex; gap: 8px; align-items: center;
+}
+.sup-share-link input {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 12px;
+  outline: none;
+}
+.btn-copy {
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-copy:active { opacity: 0.8; }
+/* Payment form */
+.amount-options {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+}
+.amount-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+}
+.amount-btn.selected {
+  background: rgba(255,107,53,0.3);
+  border-color: var(--accent);
+  color: #fff;
+}
+.amount-input {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 12px;
+  width: 100%;
+  outline: none;
+  margin-bottom: 10px;
+  font-family: var(--font-body);
+}
+.amount-input::placeholder { color: rgba(255,255,255,0.3); }
+.pay-methods { display: flex; gap: 8px; }
+.btn-pay {
+  flex: 1;
+  background: linear-gradient(135deg,#1565C0,#0d47a1);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 12px 8px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition: opacity 0.15s;
+}
+.btn-pay:active { opacity: 0.8; }
+/* Crypto */
+.crypto-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.crypto-item {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.crypto-name { font-weight: 700; color: #fff; font-size: 13px; min-width: 60px; }
+.crypto-addr {
+  font-size: 10px; color: rgba(255,255,255,0.45);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1;
+  font-family: monospace;
+}
+.btn-copy-addr {
+  background: rgba(255,255,255,0.15);
+  border: none; border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  font-size: 11px; font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  -webkit-appearance: none;
+}
+.btn-copy-addr:active { background: rgba(255,255,255,0.3); }
+
+/* Misc */
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 6vw, 30px);
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.divider { height: 1px; background: rgba(255,255,255,0.1); margin: 16px 0; }
+
+/* ═══════════════════════════════════════════════════════
+   ROCKET SVG STYLES
+═══════════════════════════════════════════════════════ */
+.flame-main {
+  animation: flameAnim 0.18s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+.flame-inner {
+  animation: flameAnim 0.12s ease-in-out infinite alternate-reverse;
+  transform-origin: top center;
+}
+@keyframes flameAnim {
+  from { transform: scaleY(1) scaleX(1); opacity:0.95; }
+  to   { transform: scaleY(1.15) scaleX(0.88); opacity:1; }
+}
+.smoke-particle {
+  animation: smokeRise 0.9s ease-out infinite;
+  opacity: 0;
+}
+.smoke-particle:nth-child(2) { animation-delay: 0.3s; }
+.smoke-particle:nth-child(3) { animation-delay: 0.6s; }
+@keyframes smokeRise {
+  0%  { opacity:0; transform: translateY(0) scale(0.5); }
+  30% { opacity:0.4; }
+  100%{ opacity:0; transform: translateY(-20px) scale(1.5); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(13,27,75,0.95);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  z-index: 9999;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════════════════
+   PERMISSIONS OVERLAY
+═══════════════════════════════════════════════════════ */
+.mic-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(13,27,75,0.95);
+  align-items: center; justify-content: center; flex-direction: column;
+  text-align: center; padding: 40px;
+  gap: 16px;
+}
+.mic-overlay.show { display: flex; }
+.mic-icon-big { font-size: 64px; animation: pulse-mic 1s infinite; }
+@keyframes pulse-mic { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+.mic-overlay h2 { font-family: var(--font-display); color: #fff; font-size: 20px; }
+.mic-overlay p { color: rgba(255,255,255,0.6); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SKY BG ═══════════════════════ -->
+<div class="sky-bg"></div>
+<div class="stars"></div>
+<div class="cloud-layer" id="cloudLayer">
+  <div class="cloud cloud-1" id="c1"></div>
+  <div class="cloud cloud-2" id="c2"></div>
+  <div class="cloud cloud-3" id="c3"></div>
+  <div class="cloud cloud-4" id="c4"></div>
+  <div class="cloud cloud-5" id="c5"></div>
+</div>
+
+<!-- ═══════════════════════ MIC OVERLAY ═══════════════════════ -->
+<div class="mic-overlay" id="micOverlay">
+  <div class="mic-icon-big">🎤</div>
+  <h2>Microphone Access</h2>
+  <p>Please allow microphone access to play Speech Rocket. This is needed only once.</p>
+</div>
+
+<!-- ═══════════════════════ PAGE: START ═══════════════════════ -->
+<div class="page active" id="page-start">
+  <div class="start-card">
+    <div class="start-logo">Speech<span>Rocket</span></div>
+    <div class="start-subtitle">English Pronunciation</div>
+    <div class="rocket-hero" id="heroRocket">
+      <!-- Inline SVG Rocket -->
+      <svg viewBox="0 0 70 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+        <g transform="translate(35,110)">
+          <ellipse class="flame-main" cx="0" cy="0" rx="13" ry="18" fill="url(#flameGrad1)"/>
+          <ellipse class="flame-inner" cx="0" cy="-2" rx="6" ry="11" fill="url(#flameGrad2)"/>
+          <circle class="smoke-particle" cx="-4" cy="20" r="5" fill="rgba(200,200,200,0.4)"/>
+          <circle class="smoke-particle" cx="4" cy="22" r="5" fill="rgba(200,200,200,0.3)"/>
+          <circle class="smoke-particle" cx="0" cy="24" r="5" fill="rgba(180,180,180,0.35)"/>
+        </g>
+        <!-- Body -->
+        <rect x="22" y="40" width="26" height="70" rx="6" fill="url(#bodyGrad)"/>
+        <!-- Nose cone -->
+        <path d="M35 2 L52 40 L18 40 Z" fill="url(#noseGrad)" rx="4"/>
+        <!-- Window -->
+        <circle cx="35" cy="65" r="9" fill="url(#windowGrad)" stroke="#90CAF9" stroke-width="2"/>
+        <circle cx="32" cy="62" r="3" fill="rgba(255,255,255,0.5)"/>
+        <!-- Left fin -->
+        <path d="M22 80 L8 108 L22 100 Z" fill="url(#finGrad)"/>
+        <!-- Right fin -->
+        <path d="M48 80 L62 108 L48 100 Z" fill="url(#finGrad)"/>
+        <!-- Stripes -->
+        <rect x="22" y="85" width="26" height="4" rx="2" fill="rgba(255,107,53,0.5)"/>
+        <rect x="22" y="95" width="26" height="3" rx="1.5" fill="rgba(100,181,246,0.4)"/>
+        <defs>
+          <linearGradient id="flameGrad1" x1="0" y1="-20" x2="0" y2="20" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="50%" stop-color="#FFC107"/>
+            <stop offset="100%" stop-color="#FF8F00" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="flameGrad2" x1="0" y1="-13" x2="0" y2="13" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#fff7e6"/>
+            <stop offset="100%" stop-color="#FFC107" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#90CAF9"/>
+            <stop offset="40%" stop-color="#E3F2FD"/>
+            <stop offset="100%" stop-color="#64B5F6"/>
+          </linearGradient>
+          <linearGradient id="noseGrad" x1="35" y1="2" x2="35" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="100%" stop-color="#E53935"/>
+          </linearGradient>
+          <radialGradient id="windowGrad" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="#1565C0"/>
+            <stop offset="100%" stop-color="#0d1b4b"/>
+          </radialGradient>
+          <linearGradient id="finGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="100%" stop-color="#E53935"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="start-rules">
+      Say the words correctly to<br><strong>fly as far as possible</strong> 🚀
+    </div>
+    <button class="btn-primary" id="startBtn">Start your flight 🚀</button>
+    <div class="start-legal">
+      By continuing, you agree to our
+      <a href="https://inream.com/terms_of_service" target="_blank">Terms of Use</a>
+      and
+      <a href="https://inream.com/privacy_policy" target="_blank">Privacy Policy</a>.
+      We use AI and cookies to provide the best site experience.
+    </div>
+    <div class="players-live">
+      <span class="dot-live"></span>
+      <strong id="playerCount">...</strong> players now
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAGE: GAMEPLAY ═══════════════════════ -->
+<div class="page" id="page-gameplay">
+  <!-- HUD top -->
+  <div class="gameplay-hud">
+    <div class="meter-display">✈ <span id="metersDisplay">0</span> meters</div>
+  </div>
+
+  <!-- Word area -->
+  <div class="word-area" id="wordArea">
+    <div class="word-bubble" id="wordBubble" style="display:none"></div>
+    <div class="accuracy-badge" id="accuracyBadge"></div>
+  </div>
+
+  <!-- Listening HUD -->
+  <div class="listen-hud" id="listenHud" style="display:none">
+    <div class="listen-waves">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="listen-label" id="listenLabel">listening...</div>
+  </div>
+
+  <!-- Rocket at bottom -->
+  <div class="rocket-area">
+    <div class="rocket-label">repeat the words correctly</div>
+    <div class="rocket-wrapper" id="rocketWrapper">
+      <svg viewBox="0 0 70 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+        <g transform="translate(35,110)">
+          <ellipse class="flame-main" cx="0" cy="0" rx="13" ry="18" fill="url(#flameGrad1b)"/>
+          <ellipse class="flame-inner" cx="0" cy="-2" rx="6" ry="11" fill="url(#flameGrad2b)"/>
+          <circle class="smoke-particle" cx="-4" cy="20" r="5" fill="rgba(200,200,200,0.4)"/>
+          <circle class="smoke-particle" cx="4" cy="22" r="5" fill="rgba(200,200,200,0.3)"/>
+        </g>
+        <rect x="22" y="40" width="26" height="70" rx="6" fill="url(#bodyGradb)"/>
+        <path d="M35 2 L52 40 L18 40 Z" fill="url(#noseGradb)"/>
+        <circle cx="35" cy="65" r="9" fill="url(#windowGradb)" stroke="#90CAF9" stroke-width="2"/>
+        <circle cx="32" cy="62" r="3" fill="rgba(255,255,255,0.5)"/>
+        <path d="M22 80 L8 108 L22 100 Z" fill="url(#finGradb)"/>
+        <path d="M48 80 L62 108 L48 100 Z" fill="url(#finGradb)"/>
+        <rect x="22" y="85" width="26" height="4" rx="2" fill="rgba(255,107,53,0.5)"/>
+        <rect x="22" y="95" width="26" height="3" rx="1.5" fill="rgba(100,181,246,0.4)"/>
+        <defs>
+          <linearGradient id="flameGrad1b" x1="0" y1="-20" x2="0" y2="20" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="50%" stop-color="#FFC107"/>
+            <stop offset="100%" stop-color="#FF8F00" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="flameGrad2b" x1="0" y1="-13" x2="0" y2="13" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#fff7e6"/>
+            <stop offset="100%" stop-color="#FFC107" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="bodyGradb" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#90CAF9"/>
+            <stop offset="40%" stop-color="#E3F2FD"/>
+            <stop offset="100%" stop-color="#64B5F6"/>
+          </linearGradient>
+          <linearGradient id="noseGradb" x1="35" y1="2" x2="35" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="100%" stop-color="#E53935"/>
+          </linearGradient>
+          <radialGradient id="windowGradb" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="#1565C0"/>
+            <stop offset="100%" stop-color="#0d1b4b"/>
+          </radialGradient>
+          <linearGradient id="finGradb" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#FF6B35"/>
+            <stop offset="100%" stop-color="#E53935"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAGE: RESULT ═══════════════════════ -->
+<div class="page" id="page-result">
+  <div class="result-inner">
+    <div class="section-title">💥 Crash!</div>
+    <div class="result-stopped-by">You were stopped by</div>
+    <div class="result-word" id="resultWord">—</div>
+    <div class="result-score-card">
+      <div class="result-score-label">Score</div>
+      <div class="result-score-value" id="resultScore">0</div>
+      <div class="result-score-sub" id="resultMeters">0 meters</div>
+      <div id="newBestWrap"></div>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat">
+        <div class="result-stat-val" id="statWords">0</div>
+        <div class="result-stat-lbl">Words</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-val" id="statAccuracy">0%</div>
+        <div class="result-stat-lbl">Accuracy</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-val" id="statHeight">0m</div>
+        <div class="result-stat-lbl">Height</div>
+      </div>
+    </div>
+    <div class="result-buttons">
+      <button class="btn-primary" id="resultContinueBtn">Continue 🏆</button>
+      <button class="btn-secondary" id="resultHelpBtn">Help us to help</button>
+      <button class="btn-boost" onclick="window.open('https://inream.com','_blank')">
+        Boost your language with our AI assistant
+        <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAGE: LEADERBOARD ═══════════════════════ -->
+<div class="page" id="page-leaderboard">
+  <div class="lb-inner">
+    <div class="lb-top-title">You are in <span id="topPercent">top 50%</span></div>
+    <div class="lb-top-sub">of all Speech Rocket players</div>
+    <table class="lb-table" id="lbTable"></table>
+    <div class="lb-achievement" id="lbAchievement">
+      <div class="lb-achievement-icon" id="lbBadgeIcon">🚀</div>
+      <div>
+        <div class="lb-achievement-title" id="lbBadgeTitle">Starting Speaker</div>
+        <div class="lb-achievement-sub" id="lbBadgeSub">Keep flying higher!</div>
+      </div>
+    </div>
+    <div class="lb-qr-wrap">
+      <div class="lb-qr-title">📲 Share the challenge</div>
+      <div id="qrcode"></div>
+    </div>
+    <div class="lb-next-badge" id="lbNextBadge"></div>
+    <button class="btn-primary" id="newFlightBtn">Start new flight 🚀</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAGE: SUPPORT ═══════════════════════ -->
+<div class="page" id="page-support">
+  <div class="sup-inner">
+    <div class="sup-title">Help us <span>help</span> people 💛</div>
+
+    <!-- Option 1: Share -->
+    <div class="sup-option">
+      <div class="sup-option-header">
+        <div class="sup-option-num">1</div>
+        Share the game with your friends
+      </div>
+      <div class="sup-option-desc">Help them improve their English speech. Sharing is free!</div>
+      <div class="sup-share-link">
+        <input type="text" value="https://do.inream.com/speech-rocket.html" readonly id="shareInput">
+        <button class="btn-copy" onclick="copyLink()">Copy</button>
+      </div>
+    </div>
+
+    <!-- Option 2: Donate -->
+    <div class="sup-option">
+      <div class="sup-option-header">
+        <div class="sup-option-num">2</div>
+        Send us a donation
+      </div>
+      <div class="sup-option-desc">Help us build more language games and tools for everyone.</div>
+
+      <!-- Amount selection -->
+      <div class="amount-options">
+        <button class="amount-btn" data-amount="1" onclick="selectAmount(1,this)">$1</button>
+        <button class="amount-btn selected" data-amount="3" onclick="selectAmount(3,this)">$3</button>
+        <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5</button>
+        <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10</button>
+        <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20</button>
+      </div>
+      <input type="number" class="amount-input" id="customAmount" placeholder="Or enter custom amount ($)" min="1">
+      <input type="text" class="amount-input" id="donationMsg" placeholder="Feature request or other (optional)">
+      <div class="pay-methods">
+        <button class="btn-pay" onclick="payByCard()">💳 Pay by Card</button>
+        <button class="btn-pay" onclick="toggleCrypto()" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">₿ Crypto</button>
+      </div>
+
+      <!-- Crypto options -->
+      <div class="crypto-list" id="cryptoList" style="display:none">
+        <div class="crypto-item">
+          <div class="crypto-name">BTC</div>
+          <div class="crypto-addr" id="addr-btc">1AkiFuMB4R4vt3Uzsi5mFY2ou7rq26V9PH</div>
+          <button class="btn-copy-addr" onclick="copyAddr('btc')">Copy</button>
+        </div>
+        <div class="crypto-item">
+          <div class="crypto-name">BSC USDT</div>
+          <div class="crypto-addr" id="addr-bsc">0x35b46cf3ffc0cc7747f34f3ab01b45bcf41b1a0d</div>
+          <button class="btn-copy-addr" onclick="copyAddr('bsc')">Copy</button>
+        </div>
+        <div class="crypto-item">
+          <div class="crypto-name">Polygon USDC/USDT</div>
+          <div class="crypto-addr" id="addr-poly">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+          <button class="btn-copy-addr" onclick="copyAddr('poly')">Copy</button>
+        </div>
+        <div class="crypto-item">
+          <div class="crypto-name">ETH USDC/USDT</div>
+          <div class="crypto-addr" id="addr-eth">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+          <button class="btn-copy-addr" onclick="copyAddr('eth')">Copy</button>
+        </div>
+        <div class="crypto-item">
+          <div class="crypto-name">TON</div>
+          <div class="crypto-addr" id="addr-ton">UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI</div>
+          <button class="btn-copy-addr" onclick="copyAddr('ton')">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-secondary" id="backFromSupportBtn">← Back</button>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 1: GAME CONFIGURATION
+   All game parameters are here for easy tuning.
+═════════════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  // Accuracy thresholds (0–100)
+  ACCURACY_THRESHOLD_EARLY: 50,    // threshold for first N words
+  ACCURACY_THRESHOLD_NORMAL: 65,   // threshold after first N words
+  EARLY_WORD_COUNT: 2,             // how many words use the lower threshold
+
+  // Falling speed (milliseconds for a word to travel top→rocket)
+  FALL_DURATION_INITIAL: 9500,     // ms — first word
+  FALL_DURATION_MIN: 3200,         // ms — fastest possible
+  FALL_DURATION_DECREASE: 180,     // ms reduction per correct word
+
+  // Scoring
+  METERS_PER_WORD: 300,            // meters per correctly spoken word
+
+  // Fake player count range (shown on start screen)
+  FAKE_PLAYERS_MIN: 300,
+  FAKE_PLAYERS_MAX: 700,
+
+  // TTS settings
+  TTS_RATE: 0.82,                  // speaking rate (0.1–10)
+  TTS_PITCH: 1.05,
+  TTS_VOLUME: 0.9,
+
+  // Cloud animation (seconds per cycle)
+  CLOUD_DURATION_INITIAL: 9,
+  CLOUD_DURATION_MIN: 2.2,
+  CLOUD_SPEED_FACTOR: 0.06,        // reduction per correct word
+
+  // Game URL
+  GAME_URL: 'https://do.inream.com/speech-rocket.html',
+
+  // Google Analytics ID
+  GA_ID: 'G-XXXXXXXXXX',
+
+  // AllPay credentials
+  ALLPAY_LOGIN: 'pp1005009',
+  ALLPAY_KEY: 'ED56551809D83BBF612D0C7711BC0A11',
+  ALLPAY_CURRENCY: 'USD',
+
+  // Crypto addresses
+  CRYPTO_ADDRS: {
+    btc:  '1AkiFuMB4R4vt3Uzsi5mFY2ou7rq26V9PH',
+    bsc:  '0x35b46cf3ffc0cc7747f34f3ab01b45bcf41b1a0d',
+    poly: '0xE65f162D76416BD22227eF0D3FB8B8E489C334D8',
+    eth:  '0xE65f162D76416BD22227eF0D3FB8B8E489C334D8',
+    ton:  'UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI'
+  },
+
+  // Achievements [wordsNeeded, icon, title]
+  ACHIEVEMENTS: [
+    [0,   '🚀', 'Starting Speaker'],
+    [10,  '🗣️',  'Clear Speaker'],
+    [20,  '💬', 'Fluent Speaker'],
+    [35,  '🎯', 'Precise Speaker'],
+    [50,  '🏆', 'Speech Master'],
+    [70,  '🎨', 'Voice Artisan'],
+    [95,  '✨', 'Eloquent Speaker'],
+    [125, '🔬', 'Phonetic Pro'],
+    [160, '🎻', 'Speech Virtuoso'],
+    [200, '👑', 'Voice Legend'],
+  ],
+
+  // Leaderboard random names pool
+  RANDOM_NAMES: [
+    'Alex K.', 'Maria S.', 'David L.', 'Emma W.', 'Ryan P.',
+    'Sofia R.', 'James T.', 'Lena M.', 'Oliver H.', 'Nora C.',
+    'Lucas B.', 'Mia F.', 'Ethan G.', 'Zoe D.', 'Noah A.',
+    'Ava J.', 'Liam O.', 'Isabella N.', 'Mason E.', 'Harper V.'
+  ]
+};
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 2: WORD LIST (70 phrases)
+   First 12: broken into individual words during gameplay
+   Next 24 (13–36): broken into 2-word pairs
+   Last 34 (37–70): presented as full phrases
+═════════════════════════════════════════════════════════════════════ */
+const PHRASES = {
+  singles: [
+    "The sun shines softly",
+    "Don't doubt the deal",
+    "Birds bring bright beauty",
+    "Keep the key clean",
+    "She sees the sea",
+    "Take that thing there",
+    "Run right round quickly",
+    "The boy buys bikes",
+    "Please pass the pen",
+    "They thought that through",
+    "Where were we whoa",
+    "Wish when we walk",
+  ],
+  pairs: [
+    "The cake came cold",
+    "Never know the name",
+    "Look left not late",
+    "Bring the big bag",
+    "That's the third thing",
+    "Hear her heart hum",
+    "The world whirls wild",
+    "Silence shapes the sound",
+    "Two tall trees twist",
+    "Make me more money",
+    "The rain runs red",
+    "Tell the truth today",
+    "Kick the cold can",
+    "Please pay proper price",
+    "Find five fine files",
+    "The sheep sleep soundly",
+    "Warm wind washes windows",
+    "The bell fell fast",
+    "Hold the heavy hammer",
+    "Shake the sheet sharply",
+    "Give good green grapes",
+    "The light looks lovely",
+    "Stop the small snake",
+    "He hopes she hears",
+  ],
+  full: [
+    "Mind my missing mug",
+    "The chair creaks clearly",
+    "Open the old oven",
+    "She sold seven shells",
+    "That's not the note",
+    "The fox found food",
+    "Turn the tap tighter",
+    "Black boots beat bricks",
+    "Grand green grass grows",
+    "The young year's yellow",
+    "Jump just in joy",
+    "The queen quickly quit",
+    "Twelve twins tried twice",
+    "Read the red rule",
+    "Your work isn't walk",
+    "Ship not sheep please",
+    "That beach needs peaches",
+    "Hat hurts head heat",
+    "Bitter butter tastes better",
+    "Fan fun phone fine",
+    "Read road rid rude",
+    "Full fool fell feel",
+    "Cheap chip ship shape",
+    "Tree three free fry",
+    "Bear beer burr bar",
+    "Met mate mat might",
+    "Pen pin pan pain",
+    "Hot hut heart hurt",
+    "Cot caught coat cut",
+    "Sit seat set sat",
+    "Lamb limb lame lime",
+    "Thank tank think thunk",
+    "Rice rise rays rose",
+    "Cough calf cave curve",
+  ]
+};
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 3: GAME STATE
+═════════════════════════════════════════════════════════════════════ */
+const STATE = {
+  sequence: [],           // array of word/phrase strings for this session
+  seqIndex: 0,            // current position in sequence
+  correctCount: 0,        // total correctly spoken words/phrases
+  meters: 0,              // current height in meters
+  accuracySum: 0,         // sum of accuracy scores for average
+  accuracyCount: 0,       // count of accuracy readings
+  fallDuration: CONFIG.FALL_DURATION_INITIAL,
+  cloudDuration: CONFIG.CLOUD_DURATION_INITIAL,
+  failedWord: '',         // word that hit the rocket
+  bestScore: 0,           // loaded from localStorage
+  sessionStart: 0,        // timestamp
+  isPlaying: false,
+  wordActive: false,      // is a word currently falling?
+  wordCorrect: false,     // has current word been answered?
+  currentTarget: '',      // the word to recognize
+  fallTimer: null,
+  donationAmount: 3,
+  pageOpenTimes: {},      // analytics timing
+  attempts: 0,
+  listeningEnabled: false, // true ONLY after TTS has finished speaking — prevents TTS output triggering recognition
+};
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 4: WORD SEQUENCE BUILDER
+═════════════════════════════════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function cleanPhrase(phrase) {
+  return phrase.replace(/\*\*/g, '').replace(/[^a-zA-Z'\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function buildSequence() {
+  const seq = [];
+
+  // Singles: break each phrase into individual words
+  for (const phrase of shuffle(PHRASES.singles)) {
+    const words = cleanPhrase(phrase).split(' ').filter(Boolean);
+    seq.push(...words);
+  }
+
+  // Pairs: break each phrase into 2-word chunks
+  for (const phrase of shuffle(PHRASES.pairs)) {
+    const words = cleanPhrase(phrase).split(' ').filter(Boolean);
+    for (let i = 0; i < words.length; i += 2) {
+      if (i + 1 < words.length) seq.push(words[i] + ' ' + words[i+1]);
+      else seq.push(words[i]);
+    }
+  }
+
+  // Full: use entire phrase
+  for (const phrase of shuffle(PHRASES.full)) {
+    seq.push(cleanPhrase(phrase));
+  }
+
+  return seq;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 5: SPEECH RECOGNITION
+═════════════════════════════════════════════════════════════════════ */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let permissionGranted = false;
+let recActive = false;
+
+function initRecognition() {
+  if (!SpeechRecognition) {
+    showToast('⚠️ Speech API not supported. Try Chrome.');
+    return;
+  }
+  if (recognition) return; // already initialized
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.maxAlternatives = 3;
+
+  recognition.onstart = () => {
+    recActive = true;
+    console.log('[SpeechRocket] 🎤 Recognition started');
+  };
+
+  recognition.onend = () => {
+    recActive = false;
+    console.log('[SpeechRocket] ⏸ Recognition ended');
+    // Auto-restart if game is active
+    if (STATE.isPlaying && permissionGranted) {
+      setTimeout(() => {
+        try { recognition.start(); } catch(e) { console.log('[SpeechRocket] restart err:', e); }
+      }, 200);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    console.error('[SpeechRocket] ❌ Recognition error:', e.error);
+    recActive = false;
+    if (e.error === 'not-allowed' || e.error === 'denied') {
+      showToast('Microphone access denied. Please allow and restart.');
+    }
+  };
+
+  recognition.onresult = (e) => {
+    // Collect all alternatives from the latest result
+    const result = e.results[e.resultIndex];
+    const transcripts = [];
+    for (let i = 0; i < result.length; i++) {
+      transcripts.push({
+        text: result[i].transcript,
+        confidence: result[i].confidence || 0
+      });
+    }
+    const allText = transcripts.map(t => t.text).join(' ');
+    const topConf = transcripts[0]?.confidence || 0;
+    const isFinal = result.isFinal;
+
+    console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${allText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
+
+    // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
+    if (!STATE.listeningEnabled) {
+      console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
+      return;
+    }
+
+    if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
+
+    // Check accuracy against current target
+    const accuracy = calcAccuracy(allText, STATE.currentTarget);
+    const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
+      ? CONFIG.ACCURACY_THRESHOLD_EARLY
+      : CONFIG.ACCURACY_THRESHOLD_NORMAL;
+
+    console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+
+    if (accuracy >= threshold) {
+      wordCorrect(accuracy);
+    }
+  };
+
+  // Log speech events
+  ['audiostart','audioend','soundstart','soundend','speechstart','speechend','nomatch'].forEach(ev => {
+    recognition.addEventListener(ev, () => console.log(`[SpeechRocket] EVENT: ${ev.toUpperCase()}`));
+  });
+}
+
+function calcAccuracy(transcript, target) {
+  const tNorm = transcript.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  const targetWords = target.toLowerCase().replace(/[^a-z\s]/g, '').trim().split(/\s+/).filter(Boolean);
+  const spokenWords = tNorm.split(/\s+/).filter(Boolean);
+
+  if (targetWords.length === 0) return 0;
+
+  let matchCount = 0;
+  for (const tw of targetWords) {
+    if (spokenWords.some(sw => {
+      if (sw === tw) return true;
+      // Allow 1 char edit distance for short words, 2 for longer
+      const maxDist = tw.length <= 4 ? 1 : 2;
+      return levenshtein(sw, tw) <= maxDist;
+    })) {
+      matchCount++;
+    }
+  }
+  return (matchCount / targetWords.length) * 100;
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function startRecognition() {
+  if (!recognition) return;
+  if (!recActive) {
+    try { recognition.start(); }
+    catch(e) { console.log('[SpeechRocket] start err:', e); }
+  }
+}
+
+function stopRecognition() {
+  if (recognition && recActive) {
+    try { recognition.stop(); }
+    catch(e) {}
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 6: GAME LOGIC
+═════════════════════════════════════════════════════════════════════ */
+function requestMicAndStart() {
+  if (permissionGranted) {
+    startGame();
+    return;
+  }
+  document.getElementById('micOverlay').classList.add('show');
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      // Stop the stream immediately — we just needed permission
+      stream.getTracks().forEach(t => t.stop());
+      permissionGranted = true;
+      document.getElementById('micOverlay').classList.remove('show');
+      initRecognition();
+      startGame();
+    })
+    .catch(err => {
+      document.getElementById('micOverlay').classList.remove('show');
+      console.error('[SpeechRocket] Mic permission error:', err);
+      showToast('Microphone access denied. Please allow and try again.');
+    });
+}
+
+function startGame() {
+  STATE.sequence = buildSequence();
+  STATE.seqIndex = 0;
+  STATE.correctCount = 0;
+  STATE.meters = 0;
+  STATE.accuracySum = 0;
+  STATE.accuracyCount = 0;
+  STATE.fallDuration = CONFIG.FALL_DURATION_INITIAL;
+  STATE.cloudDuration = CONFIG.CLOUD_DURATION_INITIAL;
+  STATE.isPlaying = true;
+  STATE.wordActive = false;
+  STATE.wordCorrect = false;
+  STATE.listeningEnabled = false;
+  clearTimeout(ttsResumeTimer);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  STATE.sessionStart = Date.now();
+  STATE.attempts++;
+
+  playRocketSound();
+  showPage('page-gameplay');
+  updateMeterDisplay();
+  startCloudAnimation();
+
+  gaEvent('game_start', { attempt: STATE.attempts });
+
+  setTimeout(() => {
+    startRecognition();
+    nextWord();
+  }, 800);
+}
+
+function nextWord() {
+  if (!STATE.isPlaying) return;
+  if (STATE.seqIndex >= STATE.sequence.length) {
+    STATE.sequence = [...STATE.sequence, ...buildSequence()];
+  }
+  const word = STATE.sequence[STATE.seqIndex];
+  STATE.seqIndex++;
+  STATE.currentTarget = word.toLowerCase();
+  STATE.wordActive = true;
+  STATE.wordCorrect = false;
+  STATE.listeningEnabled = false; // will be unlocked by speakWord after TTS ends
+
+  // Show listening HUD
+  document.getElementById('listenHud').style.display = 'flex';
+  document.getElementById('listenLabel').textContent = 'listening...';
+
+  // Show falling bubble
+  const bubble = document.getElementById('wordBubble');
+  bubble.textContent = word;
+  bubble.style.display = 'block';
+  bubble.className = 'word-bubble';
+  bubble.style.setProperty('--fall-dur', STATE.fallDuration + 'ms');
+
+  // Speak via TTS — this mutes mic and re-opens it after TTS ends
+  speakWord(word);
+
+  // Estimate TTS duration then start the fall animation
+  // (falling is purely visual — recognition is gated by listeningEnabled separately)
+  const ttsDelay = Math.max(600, word.split(' ').length * 550);
+  setTimeout(() => {
+    if (!STATE.isPlaying || STATE.wordCorrect) return;
+    bubble.classList.add('falling');
+
+    // Game over when bubble reaches the rocket
+    STATE.fallTimer = setTimeout(() => {
+      if (!STATE.wordCorrect && STATE.isPlaying) {
+        wordMissed();
+      }
+    }, STATE.fallDuration);
+  }, ttsDelay);
+}
+
+function wordCorrect(accuracy) {
+  if (!STATE.wordActive || STATE.wordCorrect) return;
+  STATE.wordCorrect = true;
+  STATE.wordActive = false;
+
+  clearTimeout(STATE.fallTimer);
+
+  // Update state
+  STATE.correctCount++;
+  STATE.meters = STATE.correctCount * CONFIG.METERS_PER_WORD;
+  STATE.accuracySum += accuracy;
+  STATE.accuracyCount++;
+
+  // Decrease fall speed
+  STATE.fallDuration = Math.max(
+    CONFIG.FALL_DURATION_MIN,
+    STATE.fallDuration - CONFIG.FALL_DURATION_DECREASE
+  );
+
+  // Increase cloud speed
+  STATE.cloudDuration = Math.max(
+    CONFIG.CLOUD_DURATION_MIN,
+    CONFIG.CLOUD_DURATION_INITIAL - STATE.correctCount * CONFIG.CLOUD_SPEED_FACTOR
+  );
+  updateCloudSpeed();
+
+  // UI feedback
+  const bubble = document.getElementById('wordBubble');
+  bubble.classList.remove('falling');
+  bubble.classList.add('correct');
+  document.getElementById('listenLabel').textContent = Math.round(accuracy) + '% ✓';
+
+  showAccuracyBadge(Math.round(accuracy));
+  playSuccessSound();
+  updateMeterDisplay();
+
+  // Next word after brief pause
+  setTimeout(() => {
+    bubble.style.display = 'none';
+    document.getElementById('listenHud').style.display = 'none';
+    if (STATE.isPlaying) setTimeout(nextWord, 300);
+  }, 700);
+}
+
+function wordMissed() {
+  STATE.isPlaying = false;
+  STATE.wordActive = false;
+  STATE.listeningEnabled = false;
+  STATE.failedWord = STATE.currentTarget;
+
+  clearTimeout(ttsResumeTimer);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+  const bubble = document.getElementById('wordBubble');
+  bubble.classList.remove('falling');
+  bubble.classList.add('missed');
+
+  // Crash animation
+  document.getElementById('rocketWrapper').classList.add('rocket-crash');
+  playCrashSound();
+
+  document.getElementById('listenHud').style.display = 'none';
+  stopRecognition();
+
+  gaEvent('result', {
+    score: calcScore(),
+    meters: STATE.meters,
+    correct_words: STATE.correctCount,
+    accuracy: avgAccuracy()
+  });
+
+  setTimeout(() => showResultPage(), 800);
+}
+
+function calcScore() {
+  return STATE.meters + (STATE.correctCount * 50) + Math.round(avgAccuracy() * 2);
+}
+
+function avgAccuracy() {
+  return STATE.accuracyCount > 0 ? Math.round(STATE.accuracySum / STATE.accuracyCount) : 0;
+}
+
+function updateMeterDisplay() {
+  document.getElementById('metersDisplay').textContent = STATE.meters.toLocaleString();
+}
+
+function showAccuracyBadge(pct) {
+  const badge = document.getElementById('accuracyBadge');
+  badge.textContent = pct + '%';
+  badge.className = 'accuracy-badge show';
+  badge.style.color = pct >= 80 ? '#69F0AE' : pct >= 60 ? '#FFC107' : '#FF5252';
+  setTimeout(() => { badge.className = 'accuracy-badge'; }, 1200);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 7: CLOUD ANIMATIONS
+═════════════════════════════════════════════════════════════════════ */
+const CLOUD_STARTS = { c1: 15, c2: 35, c3: 55, c4: 72, c5: 88 }; // % start positions
+const CLOUD_OFFSETS = [0, 2, 4, 1, 3]; // stagger seconds
+
+function startCloudAnimation() {
+  ['c1','c2','c3','c4','c5'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    const dur = STATE.cloudDuration + CLOUD_OFFSETS[i] * 0.5;
+    el.style.animation = `cloudFall ${dur}s linear ${-(CLOUD_OFFSETS[i])}s infinite`;
+  });
+}
+
+function updateCloudSpeed() {
+  ['c1','c2','c3','c4','c5'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    const dur = STATE.cloudDuration + CLOUD_OFFSETS[i] * 0.5;
+    el.style.animationDuration = dur + 's';
+  });
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 8: AUDIO (Web Audio API)
+═════════════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playRocketSound() {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+    osc.start(); osc.stop(ctx.currentTime + 0.8);
+
+    // Whoosh noise
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random()*2-1) * (1 - i/data.length);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'highpass'; filt.frequency.value = 600;
+    const ng = ctx.createGain(); ng.gain.value = 0.2;
+    src.connect(filt); filt.connect(ng); ng.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+function playCrashSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Explosion noise
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.9, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random()*2-1) * (1 - i/data.length * 0.7);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
+    src.connect(gain); gain.connect(ctx.destination);
+    src.start();
+
+    // Falling tone
+    const osc = ctx.createOscillator();
+    const og = ctx.createGain();
+    osc.connect(og); og.connect(ctx.destination);
+    osc.frequency.setValueAtTime(450, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.9);
+    og.gain.setValueAtTime(0.35, ctx.currentTime);
+    og.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
+    osc.start(); osc.stop(ctx.currentTime + 0.9);
+  } catch(e) {}
+}
+
+function playSuccessSound() {
+  try {
+    const ctx = getAudioCtx();
+    [523, 659, 784].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.08;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.25, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.28);
+      osc.start(t); osc.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+let ttsSpeaking = false;
+let ttsResumeTimer = null;
+function speakWord(text) {
+  if (!window.speechSynthesis) {
+    // No TTS — open listening immediately
+    STATE.listeningEnabled = true;
+    return;
+  }
+  try {
+    // Mute recognition for the duration of TTS + buffer
+    STATE.listeningEnabled = false;
+    clearTimeout(ttsResumeTimer);
+    window.speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = CONFIG.TTS_RATE;
+    utter.pitch = CONFIG.TTS_PITCH;
+    utter.volume = CONFIG.TTS_VOLUME;
+
+    // Prefer a native English voice
+    const voices = window.speechSynthesis.getVoices();
+    const enVoice = voices.find(v => v.lang.startsWith('en-US') && v.localService)
+      || voices.find(v => v.lang.startsWith('en-US'))
+      || voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utter.voice = enVoice;
+
+    utter.onstart = () => {
+      ttsSpeaking = true;
+      STATE.listeningEnabled = false;
+      console.log('[SpeechRocket] 🔊 TTS started — mic muted');
+    };
+
+    utter.onend = () => {
+      ttsSpeaking = false;
+      console.log('[SpeechRocket] 🔊 TTS ended — waiting 350ms before enabling mic');
+      // Wait 350ms after TTS ends before accepting any recognition results
+      ttsResumeTimer = setTimeout(() => {
+        if (STATE.isPlaying && STATE.wordActive && !STATE.wordCorrect) {
+          STATE.listeningEnabled = true;
+          console.log('[SpeechRocket] 🎤 Mic now open for player');
+        }
+      }, 350);
+    };
+
+    utter.onerror = () => {
+      ttsSpeaking = false;
+      STATE.listeningEnabled = true;
+    };
+
+    window.speechSynthesis.speak(utter);
+
+    // Fallback: if onend never fires (iOS bug), open mic after estimated TTS duration
+    const estDuration = Math.max(1500, text.split(' ').length * 600);
+    ttsResumeTimer = setTimeout(() => {
+      if (!STATE.listeningEnabled && STATE.isPlaying) {
+        STATE.listeningEnabled = true;
+        console.log('[SpeechRocket] 🎤 Mic opened via fallback timer');
+      }
+    }, estDuration + 400);
+
+  } catch(e) {
+    STATE.listeningEnabled = true;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 9: PAGES & UI
+═════════════════════════════════════════════════════════════════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  STATE.pageOpenTimes[id] = Date.now();
+  gaEvent('page_view', { page: id });
+}
+
+function showResultPage() {
+  const score = calcScore();
+  const avg = avgAccuracy();
+
+  // Check & update best score
+  const isBest = score > STATE.bestScore;
+  if (isBest) {
+    STATE.bestScore = score;
+    localStorage.setItem('srBestScore', score);
+  }
+
+  // Speak the failed word with TTS emphasis
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    const intro = new SpeechSynthesisUtterance(`You were stopped by`);
+    intro.lang = 'en-US'; intro.rate = 0.9;
+    const wordUtter = new SpeechSynthesisUtterance(STATE.failedWord);
+    wordUtter.lang = 'en-US';
+    wordUtter.rate = 0.65;
+    wordUtter.pitch = 0.85;
+    wordUtter.volume = 1;
+    window.speechSynthesis.speak(intro);
+    window.speechSynthesis.speak(wordUtter);
+  }
+
+  document.getElementById('resultWord').textContent = STATE.failedWord || '—';
+  document.getElementById('resultScore').textContent = score.toLocaleString();
+  document.getElementById('resultMeters').textContent = STATE.meters.toLocaleString() + ' meters high';
+  document.getElementById('statWords').textContent = STATE.correctCount;
+  document.getElementById('statAccuracy').textContent = avg + '%';
+  document.getElementById('statHeight').textContent = STATE.meters + 'm';
+
+  const bestWrap = document.getElementById('newBestWrap');
+  if (isBest && score > 0) {
+    bestWrap.innerHTML = '<div class="result-new-best">🏆 New Best Score!</div>';
+  } else {
+    bestWrap.innerHTML = '';
+  }
+
+  showPage('page-result');
+}
+
+function showLeaderboardPage() {
+  const score = calcScore();
+  const words = STATE.correctCount;
+
+  // Top percent
+  const topPcts = [
+    [0,  'top 50%'], [1,  'top 30%'], [2,  'top 20%'],
+    [5,  'top 10%'], [10, 'top 5%'],  [20, 'top 2%'], [30, 'top 1%']
+  ];
+  let topLabel = 'top 50%';
+  for (const [min, label] of topPcts) {
+    if (words >= min) topLabel = label;
+  }
+  document.getElementById('topPercent').textContent = topLabel;
+
+  // Leaderboard table
+  const rank = Math.floor(Math.random() * 600) + 100;
+  const usedNames = new Set();
+  function pickName() {
+    const pool = CONFIG.RANDOM_NAMES.filter(n => !usedNames.has(n));
+    const name = pool[Math.floor(Math.random() * pool.length)];
+    usedNames.add(name);
+    return name;
+  }
+
+  const rows = [
+    { rank: rank-2, name: pickName(), score: score + 55 + Math.floor(Math.random()*30) },
+    { rank: rank-1, name: pickName(), score: score + 20 + Math.floor(Math.random()*15) },
+    { rank,         name: 'You',      score: score, isYou: true },
+    { rank: rank+1, name: pickName(), score: Math.max(0, score - 15 - Math.floor(Math.random()*15)) },
+    { rank: rank+2, name: pickName(), score: Math.max(0, score - 35 - Math.floor(Math.random()*20)) },
+  ];
+
+  const table = document.getElementById('lbTable');
+  table.innerHTML = rows.map(r => `
+    <tr class="${r.isYou ? 'you-row' : ''}">
+      <td>#${r.rank}</td>
+      <td class="lb-name">${r.name}</td>
+      <td>${r.score.toLocaleString()}</td>
+    </tr>
+  `).join('');
+
+  // Achievement badge
+  const badges = CONFIG.ACHIEVEMENTS;
+  let currentBadge = badges[0];
+  for (const b of badges) {
+    if (words >= b[0]) currentBadge = b;
+  }
+  document.getElementById('lbBadgeIcon').textContent = currentBadge[1];
+  document.getElementById('lbBadgeTitle').textContent = currentBadge[2];
+  document.getElementById('lbBadgeSub').textContent = `${words} words spoken correctly`;
+
+  // Next badge
+  const nextBadge = badges.find(b => b[0] > words);
+  const lbNext = document.getElementById('lbNextBadge');
+  if (nextBadge) {
+    const needed = nextBadge[0] - words;
+    lbNext.innerHTML = `Speak <strong>${needed} more word${needed!==1?'s':''}</strong> to unlock ${nextBadge[1]} <em>${nextBadge[2]}</em>`;
+  } else {
+    lbNext.innerHTML = `🏆 You've reached the highest rank: <strong>Voice Legend!</strong>`;
+  }
+
+  // QR Code
+  const qrEl = document.getElementById('qrcode');
+  qrEl.innerHTML = '';
+  try {
+    new QRCode(qrEl, {
+      text: CONFIG.GAME_URL,
+      width: 100, height: 100,
+      colorDark: '#0d1b4b', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    qrEl.textContent = CONFIG.GAME_URL;
+  }
+
+  gaEvent('leaderboard_view', { score, place: rank, top_percent: topLabel });
+  showPage('page-leaderboard');
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 10: ANALYTICS
+═════════════════════════════════════════════════════════════════════ */
+function gaEvent(name, params) {
+  try {
+    if (typeof gtag === 'function') {
+      gtag('event', name, {
+        ...params,
+        timestamp: new Date().toISOString()
+      });
+    }
+    console.log('[SpeechRocket Analytics]', name, params);
+  } catch(e) {}
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 11: PAYMENT & SUPPORT
+═════════════════════════════════════════════════════════════════════ */
+function selectAmount(amount, btn) {
+  STATE.donationAmount = amount;
+  document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('customAmount').value = '';
+}
+
+function payByCard() {
+  const customAmt = parseFloat(document.getElementById('customAmount').value);
+  const amount = customAmt > 0 ? customAmt : STATE.donationAmount;
+  const msg = document.getElementById('donationMsg').value || 'Speech Rocket donation';
+  const orderId = 'SR_' + Date.now();
+
+  gaEvent('donate_card_click', { amount, currency: CONFIG.ALLPAY_CURRENCY });
+
+  // Build AllPay payment redirect
+  const params = new URLSearchParams({
+    api_login: CONFIG.ALLPAY_LOGIN,
+    api_password: CONFIG.ALLPAY_KEY,
+    priceAmount: amount,
+    priceCurrency: CONFIG.ALLPAY_CURRENCY,
+    orderId: orderId,
+    orderDescription: msg,
+    successUrl: CONFIG.GAME_URL,
+    failUrl: CONFIG.GAME_URL,
+    callbackUrl: CONFIG.GAME_URL
+  });
+
+  // Open AllPay hosted payment page
+  window.open('https://allpay.to/app/?show=getpaylink&' + params.toString(), '_blank');
+}
+
+function toggleCrypto() {
+  const list = document.getElementById('cryptoList');
+  list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+  gaEvent('crypto_toggle');
+}
+
+function copyAddr(coin) {
+  const addr = CONFIG.CRYPTO_ADDRS[coin];
+  copyToClipboard(addr);
+  showToast('✓ Address copied!');
+  gaEvent('crypto_copy', { coin });
+}
+
+function copyLink() {
+  copyToClipboard(CONFIG.GAME_URL);
+  showToast('✓ Link copied!');
+  gaEvent('share_link_copy');
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 12: TOAST & UTILS
+═════════════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg, duration = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SECTION 13: INITIALIZATION
+═════════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Load best score
+  STATE.bestScore = parseInt(localStorage.getItem('srBestScore')) || 0;
+
+  // Random player count, updates slowly
+  function randomizePlayers() {
+    const count = Math.floor(Math.random() * (CONFIG.FAKE_PLAYERS_MAX - CONFIG.FAKE_PLAYERS_MIN) + CONFIG.FAKE_PLAYERS_MIN);
+    const el = document.getElementById('playerCount');
+    if (el) el.textContent = count.toLocaleString();
+  }
+  randomizePlayers();
+  setInterval(() => {
+    const el = document.getElementById('playerCount');
+    if (!el) return;
+    const cur = parseInt(el.textContent.replace(/,/g,'')) || 400;
+    const delta = Math.floor(Math.random() * 7) - 3;
+    const next = Math.max(CONFIG.FAKE_PLAYERS_MIN, Math.min(CONFIG.FAKE_PLAYERS_MAX, cur + delta));
+    el.textContent = next.toLocaleString();
+  }, 3500);
+
+  // Voices preload for iOS
+  window.speechSynthesis?.getVoices();
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  // Start clouds in idle state
+  startCloudAnimation();
+
+  // Button bindings
+  document.getElementById('startBtn').addEventListener('click', () => {
+    getAudioCtx(); // unlock AudioContext on user gesture
+    requestMicAndStart();
+  });
+
+  document.getElementById('resultContinueBtn').addEventListener('click', () => {
+    showLeaderboardPage();
+  });
+
+  document.getElementById('resultHelpBtn').addEventListener('click', () => {
+    gaEvent('support_page_open', { from: 'result' });
+    showPage('page-support');
+  });
+
+  document.getElementById('newFlightBtn').addEventListener('click', () => {
+    getAudioCtx();
+    if (permissionGranted) {
+      startGame();
+    } else {
+      requestMicAndStart();
+    }
+  });
+
+  document.getElementById('backFromSupportBtn').addEventListener('click', () => {
+    showPage('page-result');
+  });
+
+  // Track time on start page
+  STATE.pageOpenTimes['page-start'] = Date.now();
+  gaEvent('page_view', { page: 'start' });
+
+  // Handle page visibility (pause/resume recognition)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && STATE.isPlaying) {
+      // Don't stop recognition but log
+      console.log('[SpeechRocket] Page hidden during gameplay');
+    }
+  });
+
+  // iOS AudioContext unlock
+  document.addEventListener('touchstart', () => {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }, { once: true });
+});
+</script>
+</body>
+</html>
