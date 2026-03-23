@@ -165,6 +165,7 @@ html, body {
   letter-spacing: 2px;
   margin-bottom: 4px;
   text-shadow: 0 0 30px rgba(255,107,53,0.6);
+  text-align: center;
 }
 .start-logo span { color: var(--accent); }
 .start-subtitle {
@@ -285,19 +286,53 @@ html, body {
 .gameplay-hud {
   position: absolute; top: 0; left: 0; right: 0;
   z-index: 20;
-  display: flex; align-items: center; justify-content: center;
-  padding: 14px 20px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px 8px;
   background: linear-gradient(180deg,rgba(13,27,75,0.9) 0%,transparent 100%);
+}
+.hud-stats {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
 }
 .meter-display {
   font-family: var(--font-display);
-  font-size: clamp(18px, 5vw, 26px);
+  font-size: clamp(14px, 4vw, 20px);
   font-weight: 700;
   color: var(--text-light);
   text-shadow: 0 0 20px rgba(255,193,7,0.5);
   letter-spacing: 1px;
 }
 .meter-display span { color: var(--accent2); }
+.words-display {
+  font-family: var(--font-display);
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.5px;
+}
+.words-display span { color: var(--success); }
+.hud-buttons {
+  display: flex; gap: 6px;
+}
+.hud-btn {
+  padding: 6px 12px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-appearance: none;
+  white-space: nowrap;
+}
+.hud-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+.hud-btn--advanced { border-color: rgba(100,181,246,0.4); color: #90CAF9; }
+.hud-btn--restart { border-color: rgba(255,107,53,0.4); color: #FF8F00; }
+.hud-btn--pause { border-color: rgba(255,255,255,0.35); color: #fff; }
 
 .word-area {
   position: absolute; inset: 0;
@@ -430,12 +465,15 @@ html, body {
   padding-bottom: 8px;
 }
 .rocket-label {
-  font-size: 11px;
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 4px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  margin-top: 2px;
   letter-spacing: 1px;
   text-transform: uppercase;
   font-weight: 700;
+  white-space: nowrap;
+  order: 1;
 }
 .rocket-wrapper {
   width: 70px;
@@ -937,7 +975,15 @@ html, body {
 <div class="page" id="page-gameplay">
   <!-- HUD top -->
   <div class="gameplay-hud">
-    <div class="meter-display">✈ <span id="metersDisplay">0</span> meters</div>
+    <div class="hud-stats">
+      <div class="meter-display"><span id="metersDisplay">0</span> m</div>
+      <div class="words-display">Words: <span id="wordsDisplay">0</span></div>
+    </div>
+    <div class="hud-buttons">
+      <button class="hud-btn hud-btn--advanced" id="advancedBtn" onclick="skipToFullPhrases()">Advanced</button>
+      <button class="hud-btn hud-btn--restart" onclick="restartGame()">Restart</button>
+      <button class="hud-btn hud-btn--pause" id="pauseBtn" onclick="togglePause()" title="Pause / Resume">&#9208;</button>
+    </div>
   </div>
 
   <!-- Word area -->
@@ -956,7 +1002,6 @@ html, body {
 
   <!-- Rocket at bottom -->
   <div class="rocket-area">
-    <div class="rocket-label">repeat the words correctly</div>
     <div class="rocket-wrapper" id="rocketWrapper">
       <svg viewBox="0 0 70 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
         <g transform="translate(35,110)">
@@ -1003,6 +1048,7 @@ html, body {
         </defs>
       </svg>
     </div>
+    <div class="rocket-label">repeat the words correctly</div>
   </div>
 </div>
 
@@ -1047,7 +1093,6 @@ html, body {
 <div class="page" id="page-leaderboard">
   <div class="lb-inner">
     <div class="lb-top-title">You are in <span id="topPercent">top 50%</span></div>
-    <div class="lb-top-sub">of all Speech Rocket players</div>
     <table class="lb-table" id="lbTable"></table>
     <div class="lb-achievement" id="lbAchievement">
       <div class="lb-achievement-icon" id="lbBadgeIcon">🚀</div>
@@ -1160,8 +1205,8 @@ const CONFIG = {
   ACCURACY_JITTER_MAX: 10,         // max % subtracted from raw accuracy for display
 
   // Tier sizes — how many items of each type before switching to the next tier
-  SINGLES_COUNT: 1,               // first N items are single words
-  PAIRS_COUNT: 2,                 // next N items are 2-word pairs, then full phrases
+  SINGLES_COUNT: 12,               // first N items are single words
+  PAIRS_COUNT: 24,                 // next N items are 2-word pairs, then full phrases
 
   // Falling speed (milliseconds for a word to travel top→rocket)
   FALL_DURATION_INITIAL: 9500,     // ms — first word (singles tier)
@@ -1335,6 +1380,8 @@ const STATE = {
   pageOpenTimes: {},      // analytics timing
   attempts: 0,
   listeningEnabled: false, // true ONLY after TTS has finished speaking — prevents TTS output triggering recognition
+  wordGeneration: 0,       // incremented on each nextWord / skip — used to invalidate stale timers
+  paused: false,
 };
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -1569,8 +1616,14 @@ function startGame() {
   STATE.wordActive = false;
   STATE.wordCorrect = false;
   STATE.listeningEnabled = false;
+  STATE.paused = false;
   clearTimeout(ttsResumeTimer);
   if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+  // Reset UI controls
+  document.getElementById('advancedBtn').style.display = '';
+  document.getElementById('pauseBtn').innerHTML = '&#9208;';
+  document.getElementById('rocketWrapper').classList.remove('rocket-crash');
   STATE.sessionStart = Date.now();
   STATE.attempts++;
 
@@ -1588,12 +1641,14 @@ function startGame() {
 }
 
 function nextWord() {
-  if (!STATE.isPlaying) return;
+  if (!STATE.isPlaying || STATE.paused) return;
   if (STATE.seqIndex >= STATE.sequence.length) {
     STATE.sequence = [...STATE.sequence, ...buildSequence()];
   }
   const word = STATE.sequence[STATE.seqIndex];
   STATE.seqIndex++;
+  STATE.wordGeneration++;
+  const gen = STATE.wordGeneration;
   STATE.currentTarget = word.toLowerCase();
   STATE.wordActive = true;
   STATE.wordCorrect = false;
@@ -1608,6 +1663,7 @@ function nextWord() {
   bubble.textContent = word;
   bubble.style.display = 'block';
   bubble.className = 'word-bubble';
+  bubble.style.animationPlayState = 'running';
   bubble.style.setProperty('--fall-dur', STATE.fallDuration + 'ms');
 
   // Speak via TTS — this mutes mic and re-opens it after TTS ends
@@ -1617,12 +1673,14 @@ function nextWord() {
   // (falling is purely visual — recognition is gated by listeningEnabled separately)
   const ttsDelay = Math.max(600, word.split(' ').length * 550);
   setTimeout(() => {
-    if (!STATE.isPlaying || STATE.wordCorrect) return;
+    // Stale timer guard: ignore if word changed, game stopped, or paused
+    if (STATE.wordGeneration !== gen || !STATE.isPlaying || STATE.wordCorrect || STATE.paused) return;
     bubble.classList.add('falling');
 
     // Game over when bubble reaches the rocket
     STATE.fallTimer = setTimeout(() => {
-      if (!STATE.wordCorrect && STATE.isPlaying) {
+      if (STATE.wordGeneration !== gen) return;
+      if (!STATE.wordCorrect && STATE.isPlaying && !STATE.paused) {
         wordMissed();
       }
     }, STATE.fallDuration);
@@ -1728,6 +1786,110 @@ function avgAccuracy() {
 
 function updateMeterDisplay() {
   document.getElementById('metersDisplay').textContent = STATE.meters.toLocaleString();
+  document.getElementById('wordsDisplay').textContent = STATE.correctCount;
+}
+
+function cancelCurrentWord() {
+  STATE.wordGeneration++;
+  clearTimeout(STATE.fallTimer);
+  clearTimeout(ttsResumeTimer);
+  STATE.wordActive = false;
+  STATE.wordCorrect = false;
+  STATE.listeningEnabled = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+  const bubble = document.getElementById('wordBubble');
+  bubble.style.display = 'none';
+  bubble.className = 'word-bubble';
+  document.getElementById('listenHud').style.display = 'none';
+}
+
+function skipToFullPhrases() {
+  if (!STATE.isPlaying) return;
+  cancelCurrentWord();
+
+  // Jump seqIndex past singles+pairs to the full-phrases tier
+  const fullStart = CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT;
+  if (STATE.seqIndex < fullStart) {
+    STATE.seqIndex = fullStart;
+  }
+
+  // Set fall duration to the full-phrases tier reset speed
+  STATE.fallDuration = CONFIG.FALL_DURATION_FULL_RESET;
+
+  // Hide the Advanced button since we're already in full phrases mode
+  document.getElementById('advancedBtn').style.display = 'none';
+
+  // Brief delay lets speechSynthesis.cancel() settle before new TTS
+  const gen = STATE.wordGeneration;
+  setTimeout(() => {
+    if (STATE.wordGeneration !== gen || !STATE.isPlaying) return;
+    startRecognition();
+    nextWord();
+  }, 500);
+}
+
+function restartGame() {
+  cancelCurrentWord();
+  STATE.isPlaying = false;
+  STATE.paused = false;
+  stopRecognition();
+
+  document.getElementById('rocketWrapper').classList.remove('rocket-crash');
+  document.getElementById('advancedBtn').style.display = '';
+  document.getElementById('pauseBtn').innerHTML = '&#9208;';
+
+  startGame();
+}
+
+function togglePause() {
+  if (!STATE.isPlaying) return;
+
+  if (!STATE.paused) {
+    // Pause
+    STATE.paused = true;
+    STATE.listeningEnabled = false;
+    clearTimeout(STATE.fallTimer);
+    clearTimeout(ttsResumeTimer);
+    if (window.speechSynthesis) window.speechSynthesis.pause();
+
+    const bubble = document.getElementById('wordBubble');
+    if (bubble.classList.contains('falling')) {
+      bubble.style.animationPlayState = 'paused';
+    }
+
+    document.getElementById('pauseBtn').innerHTML = '&#9654;';
+    document.getElementById('listenLabel').textContent = 'paused';
+  } else {
+    // Resume
+    STATE.paused = false;
+    if (window.speechSynthesis) window.speechSynthesis.resume();
+
+    const bubble = document.getElementById('wordBubble');
+    bubble.style.animationPlayState = 'running';
+
+    document.getElementById('pauseBtn').innerHTML = '&#9208;';
+
+    if (STATE.wordActive && !STATE.wordCorrect) {
+      // Word is still in play — ensure it's falling and restart its timer
+      const bubble = document.getElementById('wordBubble');
+      if (!bubble.classList.contains('falling')) {
+        bubble.classList.add('falling');
+      }
+      STATE.listeningEnabled = true;
+      const gen = STATE.wordGeneration;
+      STATE.fallTimer = setTimeout(() => {
+        if (STATE.wordGeneration !== gen) return;
+        if (!STATE.wordCorrect && STATE.isPlaying && !STATE.paused) {
+          wordMissed();
+        }
+      }, STATE.fallDuration);
+      document.getElementById('listenLabel').textContent = 'listening...';
+    } else if (!STATE.wordActive) {
+      // Paused between words — launch the next word
+      nextWord();
+    }
+  }
 }
 
 function showAccuracyBadge(pct) {
@@ -1875,12 +2037,16 @@ function speakWord(text) {
       console.log('[SpeechRocket] 🔊 TTS started — mic muted');
     };
 
+    const gen = STATE.wordGeneration;
+
     utter.onend = () => {
       ttsSpeaking = false;
+      if (STATE.wordGeneration !== gen) return; // stale utterance
       console.log('[SpeechRocket] 🔊 TTS ended — waiting 350ms before enabling mic');
       // Wait 350ms after TTS ends before accepting any recognition results
       ttsResumeTimer = setTimeout(() => {
-        if (STATE.isPlaying && STATE.wordActive && !STATE.wordCorrect) {
+        if (STATE.wordGeneration !== gen) return;
+        if (STATE.isPlaying && STATE.wordActive && !STATE.wordCorrect && !STATE.paused) {
           STATE.listeningEnabled = true;
           console.log('[SpeechRocket] 🎤 Mic now open for player');
         }
@@ -1889,7 +2055,8 @@ function speakWord(text) {
 
     utter.onerror = () => {
       ttsSpeaking = false;
-      STATE.listeningEnabled = true;
+      if (STATE.wordGeneration !== gen) return;
+      if (!STATE.paused) STATE.listeningEnabled = true;
     };
 
     window.speechSynthesis.speak(utter);
@@ -1897,7 +2064,8 @@ function speakWord(text) {
     // Fallback: if onend never fires (iOS bug), open mic after estimated TTS duration
     const estDuration = Math.max(1500, text.split(' ').length * 600);
     ttsResumeTimer = setTimeout(() => {
-      if (!STATE.listeningEnabled && STATE.isPlaying) {
+      if (STATE.wordGeneration !== gen) return;
+      if (!STATE.listeningEnabled && STATE.isPlaying && !STATE.paused) {
         STATE.listeningEnabled = true;
         console.log('[SpeechRocket] 🎤 Mic opened via fallback timer');
       }
