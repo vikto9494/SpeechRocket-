@@ -1061,7 +1061,6 @@ html, body {
     <div class="result-score-card">
       <div class="result-score-label">Score</div>
       <div class="result-score-value" id="resultScore">0</div>
-      <div class="result-score-sub" id="resultMeters">0 meters</div>
       <div id="newBestWrap"></div>
     </div>
     <div class="result-stats">
@@ -2178,14 +2177,14 @@ function showLeaderboardPage() {
   }
   document.getElementById('lbBadgeIcon').textContent = currentBadge[1];
   document.getElementById('lbBadgeTitle').textContent = currentBadge[2];
-  document.getElementById('lbBadgeSub').textContent = `${words} words spoken correctly`;
+  document.getElementById('lbBadgeSub').textContent = `${words} words flow spoken correctly`;
 
   // Next badge
   const nextBadge = badges.find(b => b[0] > words);
   const lbNext = document.getElementById('lbNextBadge');
   if (nextBadge) {
     const needed = nextBadge[0] - words;
-    lbNext.innerHTML = `Speak <strong>${needed} more word${needed!==1?'s':''}</strong> to unlock ${nextBadge[1]} <em>${nextBadge[2]}</em>`;
+    lbNext.innerHTML = `Speak <strong>${needed} more word${needed!==1?'s':''} flow</strong> to unlock ${nextBadge[1]} <em>${nextBadge[2]}</em>`;
   } else {
     lbNext.innerHTML = `🏆 You've reached the highest rank: <strong>Voice Legend!</strong>`;
   }
