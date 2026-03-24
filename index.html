@@ -799,16 +799,33 @@ textarea.donation-msg {
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "name copy"
+    "addr copy";
+  align-items: center;
+  gap: 6px 10px;
 }
-.crypto-name { font-weight: 700; color: #fff; font-size: 13px; min-width: 60px; }
+.crypto-name {
+  grid-area: name;
+  font-weight: 700;
+  color: #fff;
+  font-size: 13px;
+  min-width: 60px;
+}
 .crypto-addr {
-  font-size: 10px; color: rgba(255,255,255,0.45);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  flex: 1;
+  grid-area: addr;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.58);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
   font-family: monospace;
 }
 .btn-copy-addr {
+  grid-area: copy;
   background: rgba(255,255,255,0.15);
   border: none; border-radius: 8px;
   color: rgba(255,255,255,0.7);
@@ -820,6 +837,37 @@ textarea.donation-msg {
   -webkit-appearance: none;
 }
 .btn-copy-addr:active { background: rgba(255,255,255,0.3); }
+.crypto-screen {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+.crypto-screen.show {
+  display: flex;
+}
+.crypto-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.crypto-back {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.crypto-title {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+}
 
 /* ═══════════════════════════════════════════════════════
    PAYMENT MODAL
@@ -928,7 +976,7 @@ textarea.donation-msg {
 }
 .pay-iframe {
   width: 100%;
-  min-height: 198px;
+  min-height: 178px;
   border: none;
   border-radius: 13px;
   background: #1b2f85;
@@ -1350,49 +1398,55 @@ textarea.donation-msg {
         Send us a donation
       </div>
       <div class="sup-option-desc">Help us improve language games.</div>
-
-      <!-- Amount selection -->
-      <div class="amount-options">
-        <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5</button>
-        <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10</button>
-        <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15</button>
-        <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20</button>
-        <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50</button>
-        <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100</button>
+      <div id="donationMain">
+        <!-- Amount selection -->
+        <div class="amount-options">
+          <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5</button>
+          <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10</button>
+          <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15</button>
+          <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20</button>
+          <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50</button>
+          <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100</button>
+        </div>
+        <input type="number" class="amount-input" id="customAmount" placeholder="Or enter custom amount ($)" min="1">
+        <textarea class="amount-input donation-msg" id="donationMsg" placeholder="Feature request or other (optional)" rows="1"></textarea>
+        <div class="pay-methods">
+          <button class="btn-pay" onclick="payByCard()">💳 Pay by Card</button>
+          <button class="btn-pay" onclick="toggleCrypto()" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">₿ Crypto</button>
+        </div>
       </div>
-      <input type="number" class="amount-input" id="customAmount" placeholder="Or enter custom amount ($)" min="1">
-      <textarea class="amount-input donation-msg" id="donationMsg" placeholder="Feature request or other (optional)" rows="1"></textarea>
-      <div class="pay-methods">
-        <button class="btn-pay" onclick="payByCard()">💳 Pay by Card</button>
-        <button class="btn-pay" onclick="toggleCrypto()" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">₿ Crypto</button>
-      </div>
 
-      <!-- Crypto options -->
-      <div class="crypto-list" id="cryptoList" style="display:none">
-        <div class="crypto-item">
-          <div class="crypto-name">BTC</div>
-          <div class="crypto-addr" id="addr-btc">1AkiFuMB4R4vt3Uzsi5mFY2ou7rq26V9PH</div>
-          <button class="btn-copy-addr" onclick="copyAddr('btc')">Copy</button>
+      <div class="crypto-screen" id="cryptoScreen">
+        <div class="crypto-head">
+          <div class="crypto-title">Crypto Donation</div>
+          <button class="crypto-back" onclick="closeCrypto()">← Back</button>
         </div>
-        <div class="crypto-item">
-          <div class="crypto-name">BSC USDT</div>
-          <div class="crypto-addr" id="addr-bsc">0x35b46cf3ffc0cc7747f34f3ab01b45bcf41b1a0d</div>
-          <button class="btn-copy-addr" onclick="copyAddr('bsc')">Copy</button>
-        </div>
-        <div class="crypto-item">
-          <div class="crypto-name">Polygon USDC/USDT</div>
-          <div class="crypto-addr" id="addr-poly">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
-          <button class="btn-copy-addr" onclick="copyAddr('poly')">Copy</button>
-        </div>
-        <div class="crypto-item">
-          <div class="crypto-name">ETH USDC/USDT</div>
-          <div class="crypto-addr" id="addr-eth">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
-          <button class="btn-copy-addr" onclick="copyAddr('eth')">Copy</button>
-        </div>
-        <div class="crypto-item">
-          <div class="crypto-name">TON</div>
-          <div class="crypto-addr" id="addr-ton">UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI</div>
-          <button class="btn-copy-addr" onclick="copyAddr('ton')">Copy</button>
+        <div class="crypto-list" id="cryptoList">
+          <div class="crypto-item">
+            <div class="crypto-name">BTC</div>
+            <div class="crypto-addr" id="addr-btc">1AkiFuMB4R4vt3Uzsi5mFY2ou7rq26V9PH</div>
+            <button class="btn-copy-addr" onclick="copyAddr('btc')">Copy</button>
+          </div>
+          <div class="crypto-item">
+            <div class="crypto-name">BSC USDT</div>
+            <div class="crypto-addr" id="addr-bsc">0x35b46cf3ffc0cc7747f34f3ab01b45bcf41b1a0d</div>
+            <button class="btn-copy-addr" onclick="copyAddr('bsc')">Copy</button>
+          </div>
+          <div class="crypto-item">
+            <div class="crypto-name">Polygon USDC/USDT</div>
+            <div class="crypto-addr" id="addr-poly">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+            <button class="btn-copy-addr" onclick="copyAddr('poly')">Copy</button>
+          </div>
+          <div class="crypto-item">
+            <div class="crypto-name">ETH USDC/USDT</div>
+            <div class="crypto-addr" id="addr-eth">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+            <button class="btn-copy-addr" onclick="copyAddr('eth')">Copy</button>
+          </div>
+          <div class="crypto-item">
+            <div class="crypto-name">TON</div>
+            <div class="crypto-addr" id="addr-ton">UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI</div>
+            <button class="btn-copy-addr" onclick="copyAddr('ton')">Copy</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2811,9 +2865,18 @@ function closeThankYou() {
 }
 
 function toggleCrypto() {
-  const list = document.getElementById('cryptoList');
-  list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+  const main = document.getElementById('donationMain');
+  const crypto = document.getElementById('cryptoScreen');
+  main.style.display = 'none';
+  crypto.classList.add('show');
   gaEvent('crypto_toggle');
+}
+
+function closeCrypto() {
+  const main = document.getElementById('donationMain');
+  const crypto = document.getElementById('cryptoScreen');
+  crypto.classList.remove('show');
+  main.style.display = 'block';
 }
 
 function copyAddr(coin) {
