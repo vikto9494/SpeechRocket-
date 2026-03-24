@@ -855,27 +855,17 @@ textarea.donation-msg {
 }
 .pay-modal-body {
   padding: 20px;
-  display: flex; flex-direction: column; align-items: stretch; gap: 14px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px;
 }
 .pay-modal-amount {
   font-family: var(--font-display); font-size: 28px;
   font-weight: 900; color: var(--accent2);
 }
-.pay-modal-note {
-  width: 100%;
-  text-align: center;
-  color: rgba(255,255,255,0.72);
-  font-size: 13px;
-  line-height: 1.45;
-}
-.pay-modal-note strong {
-  color: #fff;
-}
 .pay-form-stack {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 .pay-field {
   display: flex;
@@ -918,8 +908,8 @@ textarea.donation-msg {
   width: 100%;
   display: none;
   flex-direction: column;
-  gap: 10px;
-  padding: 2px;
+  gap: 0;
+  padding: 1px;
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(255,193,7,0.85), rgba(66,165,245,0.85) 42%, rgba(13,27,75,0.95));
   border: 1px solid rgba(255,255,255,0.12);
@@ -930,18 +920,15 @@ textarea.donation-msg {
   display: flex;
 }
 .pay-card-caption {
-  color: rgba(255,255,255,0.7);
-  font-size: 11px;
-  line-height: 1.2;
-  padding: 0 2px;
+  display: none;
 }
 .pay-modal-loading {
   color: rgba(255,255,255,0.5); font-size: 14px;
-  padding: 0 2px;
+  padding: 4px 6px 6px;
 }
 .pay-iframe {
   width: 100%;
-  min-height: 235px;
+  min-height: 222px;
   border: none;
   border-radius: 14px;
   background: transparent;
@@ -969,7 +956,7 @@ textarea.donation-msg {
     max-width: 100%;
   }
   .pay-iframe {
-    min-height: 225px;
+    min-height: 214px;
   }
 }
 
@@ -1424,7 +1411,6 @@ textarea.donation-msg {
     </div>
     <div class="pay-modal-body" id="payFormBody">
       <div class="pay-modal-amount" id="payDisplayAmount">$3</div>
-      <div class="pay-modal-note">Enter your email here, then complete the secure card form without leaving Speech Rocket.</div>
       <div class="pay-form-stack">
         <label class="pay-field" for="payEmail">
           <span class="pay-field-label">Email for receipt</span>
@@ -1432,7 +1418,6 @@ textarea.donation-msg {
         </label>
       </div>
       <div class="pay-card-shell" id="payCardShell">
-        <div class="pay-card-caption">Secure card details are entered below.</div>
         <div class="pay-modal-loading" id="payLoading">Loading secure card form...</div>
         <iframe id="payIframe" name="payIframe" class="pay-iframe" allow="payment *"></iframe>
       </div>
@@ -2596,23 +2581,6 @@ function getDonationAmount() {
   return Math.round(amount * 100) / 100;
 }
 
-function isLocalHostedFieldsPreview() {
-  const host = window.location.hostname || '';
-  return window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1';
-}
-
-function updatePaymentNote() {
-  const noteEl = document.querySelector('.pay-modal-note');
-  if (!noteEl) return;
-
-  if (isLocalHostedFieldsPreview()) {
-    noteEl.innerHTML = 'Enter your email here, then complete the secure card form below. <strong>Hosted Fields also must be enabled for this domain in Allpay, and local/file previews often show the regular Allpay page instead.</strong>';
-    return;
-  }
-
-  noteEl.textContent = 'Enter your email here, then complete the secure card form below without leaving Speech Rocket.';
-}
-
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -3005,8 +2973,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   bindPaymentIframeLoad();
-  updatePaymentNote();
-
   // Track time on start page
   STATE.pageOpenTimes['page-start'] = Date.now();
   gaEvent('page_view', { page: 'start' });
