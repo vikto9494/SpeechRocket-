@@ -928,6 +928,12 @@ textarea.donation-msg {
   text-transform: uppercase;
   color: rgba(255,255,255,0.66);
 }
+.pay-field-note {
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.48);
+  margin-top: -2px;
+}
 .pay-field-input {
   width: 100%;
   border: 1px solid rgba(255,255,255,0.16);
@@ -976,7 +982,7 @@ textarea.donation-msg {
 }
 .pay-iframe {
   width: 100%;
-  min-height: 178px;
+  min-height: 158px;
   border: none;
   border-radius: 13px;
   background: #1b2f85;
@@ -1468,6 +1474,7 @@ textarea.donation-msg {
       <div class="pay-form-stack">
         <label class="pay-field" for="payEmail">
           <span class="pay-field-label">Enter email for the receipt</span>
+          <span class="pay-field-note">Required by the payment system</span>
           <input type="email" class="pay-field-input" id="payEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
         </label>
       </div>
@@ -2640,7 +2647,7 @@ function isValidEmail(email) {
 }
 
 function getPaySubmitBtnLabel() {
-  return STATE.paymentReady ? 'Donate $' + STATE.paymentAmount.toFixed(2) : 'Continue to donation details';
+  return STATE.paymentReady ? 'Donate $' + STATE.paymentAmount.toFixed(2) : 'Continue to donation';
 }
 
 function setPaymentError(message) {
@@ -2789,7 +2796,7 @@ async function prepareHostedFields() {
   }
 
   if (!isValidEmail(email)) {
-    setPaymentError('Please enter a valid email address.');
+    setPaymentError('Please enter a valid email address');
     return false;
   }
 
