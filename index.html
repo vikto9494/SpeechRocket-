@@ -845,12 +845,84 @@ textarea.donation-msg {
   font-family: var(--font-display); font-size: 28px;
   font-weight: 900; color: var(--accent2);
 }
+.pay-modal-note {
+  width: 100%;
+  text-align: center;
+  color: rgba(255,255,255,0.72);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pay-modal-note strong {
+  color: #fff;
+}
+.pay-form-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pay-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.pay-field-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.66);
+}
+.pay-field-input {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  -webkit-appearance: none;
+}
+.pay-field-input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+.pay-field-input:focus {
+  border-color: rgba(255,193,7,0.62);
+  box-shadow: 0 0 0 3px rgba(255,193,7,0.14);
+  background: rgba(255,255,255,0.11);
+}
+.pay-field-input:disabled {
+  opacity: 0.72;
+}
+.pay-card-shell {
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.pay-card-shell.show {
+  display: flex;
+}
+.pay-card-caption {
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  line-height: 1.4;
+}
 .pay-modal-loading {
   color: rgba(255,255,255,0.5); font-size: 14px;
 }
 .pay-iframe {
-  width: 100%; min-height: 300px; border: none;
-  border-radius: 10px; background: #fff;
+  width: 100%; min-height: 290px; border: none;
+  border-radius: 12px; background: #fff;
+  display: none;
 }
 .pay-error {
   color: var(--danger); font-size: 13px; text-align: center;
@@ -1204,7 +1276,7 @@ textarea.donation-msg {
     </div>
     <div class="result-buttons">
       <button class="btn-primary" id="resultContinueBtn">Continue 🏆</button>
-      <button class="btn-secondary" id="resultHelpBtn">Help us to help</button>
+      <button class="btn-secondary" id="resultHelpBtn">Help us & feature request</button>
       <button class="btn-boost" onclick="window.open('https://inream.com','_blank')">
         Boost your language with our AI assistant
         <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
@@ -1320,25 +1392,20 @@ textarea.donation-msg {
     </div>
     <div class="pay-modal-body" id="payFormBody">
       <div class="pay-modal-amount" id="payDisplayAmount">$3</div>
-      <div class="pay-modal-loading" id="payLoading">Loading payment form...</div>
-      <iframe id="payIframe" name="payIframe" class="pay-iframe" style="display:none" allow="payment"></iframe>
-      <form id="payForm" method="POST" action="https://allpay.to/app/?show=getpayment" target="payIframe" style="display:none">
-        <input type="hidden" name="api_login" id="pf_login">
-        <input type="hidden" name="sign" id="pf_sign">
-        <input type="hidden" name="priceAmount" id="pf_amount">
-        <input type="hidden" name="priceCurrency" id="pf_currency">
-        <input type="hidden" name="orderId" id="pf_orderId">
-        <input type="hidden" name="orderDescription" id="pf_desc">
-        <input type="hidden" name="successUrl" id="pf_success">
-        <input type="hidden" name="failUrl" id="pf_fail">
-        <input type="hidden" name="callbackUrl" id="pf_callback">
-        <input type="hidden" name="client_tehudat" value="000000000">
-        <input type="hidden" name="client_name" value="User Name">
-        <input type="hidden" name="client_email" id="pf_email">
-        <input type="hidden" name="lang" value="ENG">
-      </form>
+      <div class="pay-modal-note">Enter your email here, then complete the secure card form without leaving Speech Rocket.</div>
+      <div class="pay-form-stack">
+        <label class="pay-field" for="payEmail">
+          <span class="pay-field-label">Email for receipt</span>
+          <input type="email" class="pay-field-input" id="payEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
+        </label>
+      </div>
+      <div class="pay-card-shell" id="payCardShell">
+        <div class="pay-card-caption">Card number, expiration date, and CVC are securely entered inside Allpay Hosted Fields.</div>
+        <div class="pay-modal-loading" id="payLoading">Loading secure card form...</div>
+        <iframe id="payIframe" name="payIframe" class="pay-iframe" allow="payment *"></iframe>
+      </div>
       <div class="pay-error" id="payError" style="display:none"></div>
-      <button class="pay-submit" id="paySubmitBtn" style="display:none" onclick="submitPayment()">Pay now</button>
+      <button class="pay-submit" id="paySubmitBtn" onclick="submitPayment()">Continue to card details</button>
       <div class="pay-secure">🔒 SSL Secure · 256-bit encryption</div>
     </div>
   </div>
@@ -1546,6 +1613,11 @@ const STATE = {
   currentTarget: '',      // the word to recognize
   fallTimer: null,
   donationAmount: 15,
+  paymentAmount: 0,
+  paymentOrderId: '',
+  paymentUrl: '',
+  paymentLoading: false,
+  paymentReady: false,
   pageOpenTimes: {},      // analytics timing
   attempts: 0,
   listeningEnabled: false, // true ONLY after TTS has finished speaking — prevents TTS output triggering recognition
@@ -2436,6 +2508,9 @@ function gaEvent(name, params) {
 /* ═════════════════════════════════════════════════════════════════════
    SECTION 11: PAYMENT & SUPPORT
 ═════════════════════════════════════════════════════════════════════ */
+const ALLPAY_API_URL = 'https://allpay.to/app/?show=getpayment&mode=api10';
+let allpayHostedFields = null;
+
 function selectAmount(amount, btn) {
   STATE.donationAmount = amount;
   document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
@@ -2450,94 +2525,281 @@ async function sha256(str) {
     .map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function payByCard() {
-  const customAmt = parseFloat(document.getElementById('customAmount').value);
-  const amount = customAmt > 0 ? customAmt : STATE.donationAmount;
-  const msg = document.getElementById('donationMsg').value || 'Speech Rocket donation';
-  const orderId = 'SR_' + Date.now();
-
-  gaEvent('donate_card_click', { amount, currency: CONFIG.ALLPAY_CURRENCY });
-
-  // Show payment modal
-  const modal = document.getElementById('payModal');
-  const iframe = document.getElementById('payIframe');
-  const loading = document.getElementById('payLoading');
-  const submitBtn = document.getElementById('paySubmitBtn');
-  const errorEl = document.getElementById('payError');
-
-  document.getElementById('payDisplayAmount').textContent = '$' + amount;
-  loading.textContent = 'Loading payment form...';
-  loading.style.display = 'block';
-  iframe.style.display = 'none';
-  submitBtn.style.display = 'none';
-  errorEl.style.display = 'none';
-  modal.classList.add('show');
-
-  // Compute SHA256 signature: api_login + priceAmount + priceCurrency + orderId + api_key
-  const signStr = CONFIG.ALLPAY_LOGIN + amount + CONFIG.ALLPAY_CURRENCY + orderId + CONFIG.ALLPAY_KEY;
-  const sign = await sha256(signStr);
-
-  // Fill hidden form fields
-  document.getElementById('pf_login').value = CONFIG.ALLPAY_LOGIN;
-  document.getElementById('pf_sign').value = sign;
-  document.getElementById('pf_amount').value = amount;
-  document.getElementById('pf_currency').value = CONFIG.ALLPAY_CURRENCY;
-  document.getElementById('pf_orderId').value = orderId;
-  document.getElementById('pf_desc').value = msg;
-  document.getElementById('pf_success').value = CONFIG.GAME_URL;
-  document.getElementById('pf_fail').value = CONFIG.GAME_URL;
-  document.getElementById('pf_callback').value = CONFIG.GAME_URL;
-  document.getElementById('pf_email').value = 'user@speechrocket.app';
-
-  // Listen for iframe load — the form POST response (AllPay payment page) loads in the iframe
-  iframe.onload = function() {
-    loading.style.display = 'none';
-    iframe.style.display = 'block';
-    submitBtn.style.display = 'block';
-  };
-
-  // Submit form into the iframe via POST (bypasses CORS — form POST is always allowed)
-  document.getElementById('payForm').submit();
+function normalizePaymentValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return String(value);
 }
 
-function submitPayment() {
-  const submitBtn = document.getElementById('paySubmitBtn');
-  const errorEl = document.getElementById('payError');
-  errorEl.style.display = 'none';
-  submitBtn.textContent = 'Processing...';
-  submitBtn.disabled = true;
+async function getAllpaySignature(params, apiKey) {
+  const chunks = [];
+  const sortedKeys = Object.keys(params).sort();
 
-  try {
-    const allpay = new AllpayPayment({
+  sortedKeys.forEach((key) => {
+    if (key === 'sign') return;
+    const value = params[key];
+
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        Object.keys(item).sort().forEach((itemKey) => {
+          const normalized = normalizePaymentValue(item[itemKey]);
+          if (normalized !== '') chunks.push(normalized);
+        });
+      });
+      return;
+    }
+
+    const normalized = normalizePaymentValue(value);
+    if (normalized !== '') chunks.push(normalized);
+  });
+
+  return sha256(chunks.join(':') + ':' + apiKey);
+}
+
+function getDonationAmount() {
+  const customAmt = parseFloat(document.getElementById('customAmount').value);
+  const amount = customAmt > 0 ? customAmt : STATE.donationAmount;
+  return Math.round(amount * 100) / 100;
+}
+
+function isLocalHostedFieldsPreview() {
+  const host = window.location.hostname || '';
+  return window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1';
+}
+
+function updatePaymentNote() {
+  const noteEl = document.querySelector('.pay-modal-note');
+  if (!noteEl) return;
+
+  if (isLocalHostedFieldsPreview()) {
+    noteEl.innerHTML = 'Enter your email here, then complete the secure card form below. <strong>Hosted Fields also must be enabled for this domain in Allpay, and local/file previews often show the regular Allpay page instead.</strong>';
+    return;
+  }
+
+  noteEl.textContent = 'Enter your email here, then complete the secure card form below without leaving Speech Rocket.';
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getPaySubmitBtnLabel() {
+  return STATE.paymentReady ? 'Pay $' + STATE.paymentAmount.toFixed(2) : 'Continue to card details';
+}
+
+function setPaymentError(message) {
+  const errorEl = document.getElementById('payError');
+  if (!message) {
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+    return;
+  }
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+}
+
+function setPaymentLoading(isLoading, message) {
+  STATE.paymentLoading = isLoading;
+  const loading = document.getElementById('payLoading');
+  const submitBtn = document.getElementById('paySubmitBtn');
+  const emailInput = document.getElementById('payEmail');
+
+  loading.textContent = message || 'Loading secure card form...';
+  loading.style.display = isLoading ? 'block' : 'none';
+  submitBtn.disabled = isLoading;
+  submitBtn.textContent = isLoading ? 'Please wait...' : getPaySubmitBtnLabel();
+  emailInput.disabled = isLoading || STATE.paymentReady;
+}
+
+function resetPaymentState(options = {}) {
+  const { keepEmail = true } = options;
+  STATE.paymentOrderId = '';
+  STATE.paymentUrl = '';
+  STATE.paymentLoading = false;
+  STATE.paymentReady = false;
+  STATE.paymentAmount = 0;
+  allpayHostedFields = null;
+
+  const iframe = document.getElementById('payIframe');
+  const emailInput = document.getElementById('payEmail');
+  const submitBtn = document.getElementById('paySubmitBtn');
+  const loading = document.getElementById('payLoading');
+  const cardShell = document.getElementById('payCardShell');
+
+  iframe.style.display = 'none';
+  iframe.removeAttribute('src');
+  cardShell.classList.remove('show');
+  emailInput.disabled = false;
+  if (!keepEmail) emailInput.value = '';
+  loading.style.display = 'none';
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Continue to card details';
+  setPaymentError('');
+}
+
+function bindPaymentIframeLoad() {
+  const iframe = document.getElementById('payIframe');
+  iframe.onload = function() {
+    if (!STATE.paymentUrl) return;
+    STATE.paymentReady = true;
+    setPaymentLoading(false);
+    iframe.style.display = 'block';
+  };
+}
+
+function buildAllpayRequest({ amount, email, note }) {
+  const cleanAmount = amount.toFixed(2);
+  const message = note || 'Speech Rocket donation';
+
+  return {
+    login: CONFIG.ALLPAY_LOGIN,
+    order_id: 'SR_' + Date.now(),
+    items: [
+      {
+        name: 'Speech Rocket donation',
+        price: cleanAmount,
+        qty: '1',
+        vat: '3'
+      }
+    ],
+    currency: CONFIG.ALLPAY_CURRENCY,
+    lang: 'EN',
+    client_name: 'Speech Rocket Supporter',
+    client_email: email,
+    client_tehudat: '000000000',
+    backlink_url: window.location.href,
+    add_field_1: message,
+    add_field_2: 'speech_rocket_donation'
+  };
+}
+
+async function createAllpayPaymentLink({ amount, email, note }) {
+  const request = buildAllpayRequest({ amount, email, note });
+  request.sign = await getAllpaySignature(request, CONFIG.ALLPAY_KEY);
+
+  const response = await fetch(ALLPAY_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.msg || data.message || 'Unable to initialize payment.');
+  }
+
+  if (!data.payment_url) {
+    throw new Error(data.msg || data.message || 'Allpay did not return a payment form.');
+  }
+
+  return {
+    orderId: request.order_id,
+    paymentUrl: data.payment_url
+  };
+}
+
+function getHostedFieldsInstance() {
+  if (!allpayHostedFields) {
+    allpayHostedFields = new AllpayPayment({
       iframeId: 'payIframe',
-      onSuccess: function(result) {
+      onSuccess: function() {
+        const email = document.getElementById('payEmail').value.trim();
+        if (email) localStorage.setItem('srDonationEmail', email);
         closePayModal();
         showThankYou();
       },
       onError: function(error_n, error_msg) {
-        submitBtn.textContent = 'Pay now';
+        setPaymentError(error_msg || ('Payment error: ' + error_n));
+        const submitBtn = document.getElementById('paySubmitBtn');
         submitBtn.disabled = false;
-        errorEl.textContent = error_msg || 'Payment failed. Please try again.';
-        errorEl.style.display = 'block';
+        submitBtn.textContent = getPaySubmitBtnLabel();
       }
     });
-    allpay.pay();
+  }
+
+  return allpayHostedFields;
+}
+
+async function prepareHostedFields() {
+  const amount = getDonationAmount();
+  const email = document.getElementById('payEmail').value.trim();
+  const note = document.getElementById('donationMsg').value || 'Speech Rocket donation';
+  const cardShell = document.getElementById('payCardShell');
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setPaymentError('Please enter a valid donation amount.');
+    return false;
+  }
+
+  if (!isValidEmail(email)) {
+    setPaymentError('Please enter a valid email address.');
+    return false;
+  }
+
+  STATE.paymentAmount = amount;
+  document.getElementById('payDisplayAmount').textContent = '$' + amount.toFixed(2);
+  setPaymentError('');
+  setPaymentLoading(true, 'Loading secure card form...');
+  cardShell.classList.add('show');
+
+  try {
+    const { orderId, paymentUrl } = await createAllpayPaymentLink({ amount, email, note });
+    STATE.paymentOrderId = orderId;
+    STATE.paymentUrl = paymentUrl;
+    document.getElementById('payIframe').src = paymentUrl;
+    getHostedFieldsInstance();
+    return true;
+  } catch (error) {
+    cardShell.classList.remove('show');
+    setPaymentLoading(false);
+    setPaymentError(error?.message || 'Unable to open the payment form. Please try again.');
+    return false;
+  }
+}
+
+async function payByCard() {
+  const amount = getDonationAmount();
+
+  gaEvent('donate_card_click', { amount, currency: CONFIG.ALLPAY_CURRENCY });
+
+  const modal = document.getElementById('payModal');
+  const storedEmail = localStorage.getItem('srDonationEmail') || '';
+
+  resetPaymentState({ keepEmail: false });
+  document.getElementById('payDisplayAmount').textContent = '$' + amount.toFixed(2);
+  document.getElementById('payEmail').value = storedEmail;
+  modal.classList.add('show');
+}
+
+async function submitPayment() {
+  if (STATE.paymentLoading) return;
+
+  if (!STATE.paymentReady) {
+    await prepareHostedFields();
+    return;
+  }
+
+  const submitBtn = document.getElementById('paySubmitBtn');
+  setPaymentError('');
+  submitBtn.textContent = 'Processing...';
+  submitBtn.disabled = true;
+
+  try {
+    getHostedFieldsInstance().pay();
   } catch(e) {
-    submitBtn.textContent = 'Pay now';
+    submitBtn.textContent = getPaySubmitBtnLabel();
     submitBtn.disabled = false;
-    errorEl.textContent = 'Payment error. Please try again.';
-    errorEl.style.display = 'block';
+    setPaymentError('Payment error. Please try again.');
   }
 }
 
 function closePayModal() {
   const modal = document.getElementById('payModal');
   modal.classList.remove('show');
-  const iframe = document.getElementById('payIframe');
-  iframe.src = '';
-  const submitBtn = document.getElementById('paySubmitBtn');
-  submitBtn.textContent = 'Pay now';
-  submitBtn.disabled = false;
+  resetPaymentState();
 }
 
 function showThankYou() {
@@ -2709,6 +2971,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.style.height = this.scrollHeight + 'px';
     });
   }
+
+  bindPaymentIframeLoad();
+  updatePaymentNote();
 
   // Track time on start page
   STATE.pageOpenTimes['page-start'] = Date.now();
