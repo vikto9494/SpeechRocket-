@@ -634,13 +634,11 @@ html, body {
 .lb-achievement-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--accent2); }
 .lb-achievement-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 .lb-qr-wrap {
-  display: flex;              /* Enable Flexbox layout */
-  justify-content: space-between; /* Left: first child, Right: second child */
   background: rgba(255,255,255,0.07);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
-  /* Remove text-align: center; as Flexbox overrides it */
+  text-align: center;
 }
 .lb-qr-title { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
 #qrcode { display: inline-block; background: #fff; padding: 8px; border-radius: 10px; }
@@ -756,6 +754,13 @@ html, body {
   font-family: var(--font-body);
 }
 .amount-input::placeholder { color: rgba(255,255,255,0.3); }
+textarea.donation-msg {
+  resize: none;
+  overflow: hidden;
+  min-height: 38px;
+  line-height: 1.4;
+  field-sizing: content;
+}
 .pay-methods { display: flex; gap: 8px; }
 .btn-pay {
   flex: 1;
@@ -799,6 +804,70 @@ html, body {
   -webkit-appearance: none;
 }
 .btn-copy-addr:active { background: rgba(255,255,255,0.3); }
+
+/* ═══════════════════════════════════════════════════════
+   PAYMENT MODAL
+═══════════════════════════════════════════════════════ */
+.pay-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.pay-modal.show { display: flex; }
+.pay-modal-card {
+  background: linear-gradient(180deg, #1a237e 0%, #0d1b4b 100%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%; max-width: 400px;
+  overflow: hidden;
+}
+.pay-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.pay-modal-header h3 {
+  font-family: var(--font-display); color: #fff;
+  font-size: 16px; margin: 0;
+}
+.pay-modal-close {
+  background: none; border: none; color: rgba(255,255,255,0.6);
+  font-size: 24px; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.pay-modal-body {
+  padding: 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.pay-modal-amount {
+  font-family: var(--font-display); font-size: 28px;
+  font-weight: 900; color: var(--accent2);
+}
+.pay-modal-loading {
+  color: rgba(255,255,255,0.5); font-size: 14px;
+}
+.pay-iframe {
+  width: 100%; min-height: 300px; border: none;
+  border-radius: 10px; background: #fff;
+}
+.pay-error {
+  color: var(--danger); font-size: 13px; text-align: center;
+}
+.pay-submit {
+  width: 100%;
+  background-image: linear-gradient(90deg, #3f8cff 0%, #7a5cff 50%, #202449 100%);
+  color: #fff; border: none; border-radius: 12px;
+  padding: 14px 24px; font-size: 16px; font-weight: 700;
+  font-family: var(--font-body); cursor: pointer;
+  box-shadow: 0 4px 12px rgba(63, 140, 255, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.pay-submit:active { transform: scale(0.97); }
+.pay-secure {
+  color: rgba(255,255,255,0.4); font-size: 12px; text-align: center;
+}
 
 /* Misc */
 .section-title {
@@ -1193,14 +1262,15 @@ html, body {
 
       <!-- Amount selection -->
       <div class="amount-options">
-        <button class="amount-btn" data-amount="1" onclick="selectAmount(1,this)">$1</button>
-        <button class="amount-btn selected" data-amount="3" onclick="selectAmount(3,this)">$3</button>
         <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5</button>
         <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10</button>
+        <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15</button>
         <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20</button>
+        <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50</button>
+        <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100</button>
       </div>
       <input type="number" class="amount-input" id="customAmount" placeholder="Or enter custom amount ($)" min="1">
-      <input type="text" class="amount-input" id="donationMsg" placeholder="Feature request or other (optional)">
+      <textarea class="amount-input donation-msg" id="donationMsg" placeholder="Feature request or other (optional)" rows="1"></textarea>
       <div class="pay-methods">
         <button class="btn-pay" onclick="payByCard()">💳 Pay by Card</button>
         <button class="btn-pay" onclick="toggleCrypto()" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">₿ Crypto</button>
@@ -1241,9 +1311,53 @@ html, body {
   </div>
 </div>
 
+<!-- ═══════════════════════ PAYMENT MODAL ═══════════════════════ -->
+<div class="pay-modal" id="payModal">
+  <div class="pay-modal-card">
+    <div class="pay-modal-header">
+      <h3>💳 Secure Payment</h3>
+      <button class="pay-modal-close" id="payModalClose" onclick="closePayModal()">&times;</button>
+    </div>
+    <div class="pay-modal-body" id="payFormBody">
+      <div class="pay-modal-amount" id="payDisplayAmount">$3</div>
+      <div class="pay-modal-loading" id="payLoading">Loading payment form...</div>
+      <iframe id="payIframe" name="payIframe" class="pay-iframe" style="display:none" allow="payment"></iframe>
+      <form id="payForm" method="POST" action="https://allpay.to/app/?show=getpayment" target="payIframe" style="display:none">
+        <input type="hidden" name="api_login" id="pf_login">
+        <input type="hidden" name="sign" id="pf_sign">
+        <input type="hidden" name="priceAmount" id="pf_amount">
+        <input type="hidden" name="priceCurrency" id="pf_currency">
+        <input type="hidden" name="orderId" id="pf_orderId">
+        <input type="hidden" name="orderDescription" id="pf_desc">
+        <input type="hidden" name="successUrl" id="pf_success">
+        <input type="hidden" name="failUrl" id="pf_fail">
+        <input type="hidden" name="callbackUrl" id="pf_callback">
+        <input type="hidden" name="client_tehudat" value="000000000">
+        <input type="hidden" name="client_name" value="User Name">
+        <input type="hidden" name="client_email" id="pf_email">
+        <input type="hidden" name="lang" value="ENG">
+      </form>
+      <div class="pay-error" id="payError" style="display:none"></div>
+      <button class="pay-submit" id="paySubmitBtn" style="display:none" onclick="submitPayment()">Pay now</button>
+      <div class="pay-secure">🔒 SSL Secure · 256-bit encryption</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ THANK YOU SCREEN ═══════════════════════ -->
+<div class="pay-modal" id="thankYouModal">
+  <div class="pay-modal-card" style="text-align:center">
+    <div style="font-size:64px;margin:20px 0">🎉</div>
+    <h2 style="font-family:var(--font-display);color:#fff;margin-bottom:12px">Thank you!</h2>
+    <p style="color:rgba(255,255,255,0.8);font-size:16px;margin-bottom:24px">Your payment was successful.<br>Thank you for supporting Speech Rocket!</p>
+    <button class="btn-primary" onclick="closeThankYou()" style="width:100%;max-width:280px">Continue 🚀</button>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="https://allpay.to/js/allpay-hf.js"></script>
 <script>
 /* ═════════════════════════════════════════════════════════════════════
    SECTION 1: GAME CONFIGURATION
@@ -1431,7 +1545,7 @@ const STATE = {
   wordCorrect: false,     // has current word been answered?
   currentTarget: '',      // the word to recognize
   fallTimer: null,
-  donationAmount: 3,
+  donationAmount: 15,
   pageOpenTimes: {},      // analytics timing
   attempts: 0,
   listeningEnabled: false, // true ONLY after TTS has finished speaking — prevents TTS output triggering recognition
@@ -2329,7 +2443,14 @@ function selectAmount(amount, btn) {
   document.getElementById('customAmount').value = '';
 }
 
-function payByCard() {
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256',
+    new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function payByCard() {
   const customAmt = parseFloat(document.getElementById('customAmount').value);
   const amount = customAmt > 0 ? customAmt : STATE.donationAmount;
   const msg = document.getElementById('donationMsg').value || 'Speech Rocket donation';
@@ -2337,21 +2458,94 @@ function payByCard() {
 
   gaEvent('donate_card_click', { amount, currency: CONFIG.ALLPAY_CURRENCY });
 
-  // Build AllPay payment redirect
-  const params = new URLSearchParams({
-    api_login: CONFIG.ALLPAY_LOGIN,
-    api_password: CONFIG.ALLPAY_KEY,
-    priceAmount: amount,
-    priceCurrency: CONFIG.ALLPAY_CURRENCY,
-    orderId: orderId,
-    orderDescription: msg,
-    successUrl: CONFIG.GAME_URL,
-    failUrl: CONFIG.GAME_URL,
-    callbackUrl: CONFIG.GAME_URL
-  });
+  // Show payment modal
+  const modal = document.getElementById('payModal');
+  const iframe = document.getElementById('payIframe');
+  const loading = document.getElementById('payLoading');
+  const submitBtn = document.getElementById('paySubmitBtn');
+  const errorEl = document.getElementById('payError');
 
-  // Open AllPay hosted payment page
-  window.open('https://allpay.to/app/?show=getpaylink&' + params.toString(), '_blank');
+  document.getElementById('payDisplayAmount').textContent = '$' + amount;
+  loading.textContent = 'Loading payment form...';
+  loading.style.display = 'block';
+  iframe.style.display = 'none';
+  submitBtn.style.display = 'none';
+  errorEl.style.display = 'none';
+  modal.classList.add('show');
+
+  // Compute SHA256 signature: api_login + priceAmount + priceCurrency + orderId + api_key
+  const signStr = CONFIG.ALLPAY_LOGIN + amount + CONFIG.ALLPAY_CURRENCY + orderId + CONFIG.ALLPAY_KEY;
+  const sign = await sha256(signStr);
+
+  // Fill hidden form fields
+  document.getElementById('pf_login').value = CONFIG.ALLPAY_LOGIN;
+  document.getElementById('pf_sign').value = sign;
+  document.getElementById('pf_amount').value = amount;
+  document.getElementById('pf_currency').value = CONFIG.ALLPAY_CURRENCY;
+  document.getElementById('pf_orderId').value = orderId;
+  document.getElementById('pf_desc').value = msg;
+  document.getElementById('pf_success').value = CONFIG.GAME_URL;
+  document.getElementById('pf_fail').value = CONFIG.GAME_URL;
+  document.getElementById('pf_callback').value = CONFIG.GAME_URL;
+  document.getElementById('pf_email').value = 'user@speechrocket.app';
+
+  // Listen for iframe load — the form POST response (AllPay payment page) loads in the iframe
+  iframe.onload = function() {
+    loading.style.display = 'none';
+    iframe.style.display = 'block';
+    submitBtn.style.display = 'block';
+  };
+
+  // Submit form into the iframe via POST (bypasses CORS — form POST is always allowed)
+  document.getElementById('payForm').submit();
+}
+
+function submitPayment() {
+  const submitBtn = document.getElementById('paySubmitBtn');
+  const errorEl = document.getElementById('payError');
+  errorEl.style.display = 'none';
+  submitBtn.textContent = 'Processing...';
+  submitBtn.disabled = true;
+
+  try {
+    const allpay = new AllpayPayment({
+      iframeId: 'payIframe',
+      onSuccess: function(result) {
+        closePayModal();
+        showThankYou();
+      },
+      onError: function(error_n, error_msg) {
+        submitBtn.textContent = 'Pay now';
+        submitBtn.disabled = false;
+        errorEl.textContent = error_msg || 'Payment failed. Please try again.';
+        errorEl.style.display = 'block';
+      }
+    });
+    allpay.pay();
+  } catch(e) {
+    submitBtn.textContent = 'Pay now';
+    submitBtn.disabled = false;
+    errorEl.textContent = 'Payment error. Please try again.';
+    errorEl.style.display = 'block';
+  }
+}
+
+function closePayModal() {
+  const modal = document.getElementById('payModal');
+  modal.classList.remove('show');
+  const iframe = document.getElementById('payIframe');
+  iframe.src = '';
+  const submitBtn = document.getElementById('paySubmitBtn');
+  submitBtn.textContent = 'Pay now';
+  submitBtn.disabled = false;
+}
+
+function showThankYou() {
+  document.getElementById('thankYouModal').classList.add('show');
+}
+
+function closeThankYou() {
+  document.getElementById('thankYouModal').classList.remove('show');
 }
 
 function toggleCrypto() {
@@ -2506,6 +2700,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('backFromSupportBtn').addEventListener('click', () => {
     showPage('page-result');
   });
+
+  // Auto-stretch textarea for feature request
+  const donationMsg = document.getElementById('donationMsg');
+  if (donationMsg) {
+    donationMsg.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+  }
 
   // Track time on start page
   STATE.pageOpenTimes['page-start'] = Date.now();

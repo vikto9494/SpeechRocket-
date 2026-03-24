@@ -23,6 +23,8 @@ speech-rocket/
 └── CLAUDE.md              ← this file
 ```
 
+**Always edit code in the main branch directly.** Never create feature branches or worktrees — all changes go straight to main.
+
 Do not split into separate CSS/JS files unless explicitly instructed.
 Do not introduce a build system, bundler, or framework unless explicitly instructed.
 
