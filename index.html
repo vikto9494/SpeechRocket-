@@ -1162,7 +1162,7 @@ textarea.donation-msg {
 <div class="embedded-overlay" id="embeddedOverlay">
   <div class="embedded-icon">🔇</div>
   <h2>This browser doesn't support voice recording</h2>
-  <p>You're viewing this inside an app (like Facebook, Instagram, or another messenger). Voice input won't work here.</p>
+  <p id="embeddedMessage">You're viewing this inside an app or an unsupported browser. Voice input works best in Chrome or Safari.</p>
   <div class="embedded-actions">
     <button class="btn-open-browser" id="openBrowserBtn">Open in Safari / Chrome</button>
     <button class="btn-copy-link" id="copyLinkBtn">Copy link</button>
@@ -1780,7 +1780,7 @@ let recActive = false;
 
 function initRecognition() {
   if (!SpeechRecognition) {
-    showToast('⚠️ Speech API not supported. Try Chrome.');
+    showToast('⚠️ Speech API not supported. Try Chrome or Safari.');
     return;
   }
   if (recognition) return; // already initialized
@@ -1910,7 +1910,7 @@ function stopRecognition() {
    SECTION 6: GAME LOGIC
 ═════════════════════════════════════════════════════════════════════ */
 function requestMicAndStart() {
-  if (isEmbeddedBrowser()) {
+  if (shouldSuggestChromeOrSafari()) {
     showEmbeddedWarning();
     return;
   }
@@ -1931,7 +1931,7 @@ function requestMicAndStart() {
     .catch(err => {
       document.getElementById('micOverlay').classList.remove('show');
       console.error('[SpeechRocket] Mic permission error:', err);
-      if (isEmbeddedBrowser()) {
+      if (shouldSuggestChromeOrSafari()) {
         showEmbeddedWarning();
       } else {
         showToast('Microphone access denied. Please allow and try again.');
@@ -2934,7 +2934,7 @@ function showToast(msg, duration = 2200) {
   toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
-function isEmbeddedBrowser() {
+function isEmbeddedApp() {
   const ua = (window.navigator.userAgent || '').toLowerCase();
   const indicators = [
     'fban', 'fbav', 'instagram', 'threads',
@@ -2944,11 +2944,54 @@ function isEmbeddedBrowser() {
   return indicators.some(id => ua.includes(id));
 }
 
+function isChromeOrSafariBrowser() {
+  const ua = (window.navigator.userAgent || '').toLowerCase();
+  const vendor = (window.navigator.vendor || '').toLowerCase();
+
+  const isIOSChrome = ua.includes('crios');
+  const isChrome = (ua.includes('chrome') || ua.includes('chromium') || isIOSChrome) &&
+    !ua.includes('edg') &&
+    !ua.includes('opr') &&
+    !ua.includes('opera') &&
+    !ua.includes('samsungbrowser') &&
+    !ua.includes('ucbrowser') &&
+    !ua.includes('firefox') &&
+    !ua.includes('fxios') &&
+    !ua.includes('brave') &&
+    !ua.includes('duckduckgo');
+
+  const isSafari = ua.includes('safari') &&
+    vendor.includes('apple') &&
+    !ua.includes('chrome') &&
+    !ua.includes('chromium') &&
+    !ua.includes('crios') &&
+    !ua.includes('fxios') &&
+    !ua.includes('edg') &&
+    !ua.includes('opr') &&
+    !ua.includes('opera') &&
+    !ua.includes('android');
+
+  return isChrome || isSafari;
+}
+
+function shouldSuggestChromeOrSafari() {
+  return isEmbeddedApp() || !isChromeOrSafariBrowser();
+}
+
 function showEmbeddedWarning() {
   const overlay = document.getElementById('embeddedOverlay');
+  const message = document.getElementById('embeddedMessage');
+  const openBtn = document.getElementById('openBrowserBtn');
+  const copyBtn = document.getElementById('copyLinkBtn');
+  const isEmbedded = isEmbeddedApp();
+
+  message.textContent = isEmbedded
+    ? "You're viewing this inside an app (like Facebook, Instagram, or another messenger). Voice input won't work here."
+    : "You're using a browser that doesn't fully support voice input here. Open Speech Rocket in Chrome or Safari.";
+
   overlay.classList.add('show');
 
-  document.getElementById('openBrowserBtn').addEventListener('click', () => {
+  openBtn.onclick = () => {
     const url = window.location.href;
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('android')) {
@@ -2957,10 +3000,10 @@ function showEmbeddedWarning() {
     } else {
       window.open(url, '_blank');
     }
-  });
+  };
 
-  document.getElementById('copyLinkBtn').addEventListener('click', () => {
-    const btn = document.getElementById('copyLinkBtn');
+  copyBtn.onclick = () => {
+    const btn = copyBtn;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href).then(() => {
         btn.textContent = 'Copied!';
@@ -2977,7 +3020,7 @@ function showEmbeddedWarning() {
       btn.textContent = 'Copied!';
       setTimeout(() => { btn.textContent = 'Copy link'; }, 2500);
     }
-  });
+  };
 }
 
 /* ═════════════════════════════════════════════════════════════════════
