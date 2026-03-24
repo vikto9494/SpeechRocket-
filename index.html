@@ -412,42 +412,36 @@ html, body {
 /* Listening indicator */
 .listen-hud {
   position: absolute;
-  bottom: 122px;
-  left: calc(50% + 64px);
+  bottom: 105px;
+  left: 50%;
   transform: translateX(-50%);
   z-index: 25;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: rgba(13,27,75,0.34);
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+  gap: 6px;
   pointer-events: none;
 }
 .listen-label {
-  background: transparent;
-  backdrop-filter: none;
-  border: none;
+  background: rgba(13,27,75,0.46);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
   color: rgba(255,255,255,0.9);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 0;
-  border-radius: 0;
-  letter-spacing: 0.8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   text-shadow: 0 1px 8px rgba(13,27,75,0.35);
 }
 .listen-waves {
-  display: flex; align-items: center; gap: 3px; height: 20px;
+  display: flex; align-items: center; gap: 4px; height: 24px;
 }
 .listen-waves span {
   display: block;
-  width: 3px;
+  width: 4px;
   background: rgba(105,240,174,0.9);
   border-radius: 2px;
   animation: wave 1s ease-in-out infinite;
@@ -465,13 +459,11 @@ html, body {
 
 @media (max-width: 420px) {
   .listen-hud {
-    left: calc(50% + 54px);
-    bottom: 118px;
-    gap: 7px;
-    padding: 6px 10px;
+    left: 50%;
+    bottom: 102px;
   }
   .listen-label {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 
@@ -845,7 +837,7 @@ textarea.donation-msg {
   background: linear-gradient(180deg, #1a237e 0%, #0d1b4b 100%);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  width: 100%; max-width: 400px;
+  width: 100%; max-width: 430px;
   overflow: hidden;
 }
 .pay-modal-header {
@@ -863,7 +855,7 @@ textarea.donation-msg {
 }
 .pay-modal-body {
   padding: 20px;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 14px;
 }
 .pay-modal-amount {
   font-family: var(--font-display); font-size: 28px;
@@ -927,10 +919,10 @@ textarea.donation-msg {
   display: none;
   flex-direction: column;
   gap: 10px;
-  padding: 14px;
+  padding: 0;
   border-radius: 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  border: none;
 }
 .pay-card-shell.show {
   display: flex;
@@ -944,8 +936,11 @@ textarea.donation-msg {
   color: rgba(255,255,255,0.5); font-size: 14px;
 }
 .pay-iframe {
-  width: 100%; min-height: 290px; border: none;
-  border-radius: 12px; background: #fff;
+  width: 100%;
+  min-height: 245px;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
   display: none;
 }
 .pay-error {
@@ -963,6 +958,15 @@ textarea.donation-msg {
 .pay-submit:active { transform: scale(0.97); }
 .pay-secure {
   color: rgba(255,255,255,0.4); font-size: 12px; text-align: center;
+}
+
+@media (max-width: 420px) {
+  .pay-modal-card {
+    max-width: 100%;
+  }
+  .pay-iframe {
+    min-height: 230px;
+  }
 }
 
 /* Misc */
@@ -1437,11 +1441,11 @@ textarea.donation-msg {
 
 <!-- ═══════════════════════ THANK YOU SCREEN ═══════════════════════ -->
 <div class="pay-modal" id="thankYouModal">
-  <div class="pay-modal-card" style="text-align:center">
+  <div class="pay-modal-card" style="text-align:center;display:flex;flex-direction:column;align-items:center;padding:20px">
     <div style="font-size:64px;margin:20px 0">🎉</div>
     <h2 style="font-family:var(--font-display);color:#fff;margin-bottom:12px">Thank you!</h2>
-    <p style="color:rgba(255,255,255,0.8);font-size:16px;margin-bottom:24px">Your payment was successful.<br>Thank you for supporting Speech Rocket!</p>
-    <button class="btn-primary" onclick="closeThankYou()" style="width:100%;max-width:280px">Continue 🚀</button>
+    <p style="color:rgba(255,255,255,0.8);font-size:16px;margin-bottom:24px">Your payment was successful.<br>Thank you!</p>
+    <button class="btn-primary" onclick="closeThankYou()" style="width:100%;max-width:280px;align-self:center;margin:0 auto">Continue 🚀</button>
   </div>
 </div>
 
