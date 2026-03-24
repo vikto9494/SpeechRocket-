@@ -1164,7 +1164,7 @@ textarea.donation-msg {
   <h2>This browser doesn't support voice recording</h2>
   <p id="embeddedMessage">You're viewing this inside an app or an unsupported browser. Voice input works best in Chrome or Safari.</p>
   <div class="embedded-actions">
-    <button class="btn-open-browser" id="openBrowserBtn">Open in Safari / Chrome</button>
+    <button class="btn-open-browser" id="openBrowserBtn">Open in Chrome or Safari</button>
     <button class="btn-copy-link" id="copyLinkBtn">Copy link</button>
   </div>
   <div class="embedded-hint">Open the link in a regular browser to play Speech Rocket</div>
@@ -1780,7 +1780,7 @@ let recActive = false;
 
 function initRecognition() {
   if (!SpeechRecognition) {
-    showToast('⚠️ Speech API not supported. Try Chrome or Safari.');
+    showToast('⚠️ Speech API not supported. Try Chrome, Safari, Edge, Opera, or Samsung Internet.');
     return;
   }
   if (recognition) return; // already initialized
@@ -1910,7 +1910,7 @@ function stopRecognition() {
    SECTION 6: GAME LOGIC
 ═════════════════════════════════════════════════════════════════════ */
 function requestMicAndStart() {
-  if (shouldSuggestChromeOrSafari()) {
+  if (shouldSuggestSupportedBrowser()) {
     showEmbeddedWarning();
     return;
   }
@@ -1931,7 +1931,7 @@ function requestMicAndStart() {
     .catch(err => {
       document.getElementById('micOverlay').classList.remove('show');
       console.error('[SpeechRocket] Mic permission error:', err);
-      if (shouldSuggestChromeOrSafari()) {
+      if (shouldSuggestSupportedBrowser()) {
         showEmbeddedWarning();
       } else {
         showToast('Microphone access denied. Please allow and try again.');
@@ -2939,12 +2939,19 @@ function isEmbeddedApp() {
   const indicators = [
     'fban', 'fbav', 'instagram', 'threads',
     'linkedin', 'snapchat', 'tiktok',
+    'telegram', 'telegrambot', 'tgwebview',
     'wechat', 'weibo', 'pinterest', 'viber', 'line/'
   ];
-  return indicators.some(id => ua.includes(id));
+  const hasTelegramWebviewBridge =
+    typeof window.TelegramWebview !== 'undefined' ||
+    typeof window.TelegramWebviewProxy !== 'undefined' ||
+    typeof window.TelegramWebviewProxyProto !== 'undefined' ||
+    !!(window.Telegram && window.Telegram.WebApp);
+
+  return indicators.some(id => ua.includes(id)) || hasTelegramWebviewBridge;
 }
 
-function isChromeOrSafariBrowser() {
+function isSupportedBrowser() {
   const ua = (window.navigator.userAgent || '').toLowerCase();
   const vendor = (window.navigator.vendor || '').toLowerCase();
 
@@ -2960,6 +2967,12 @@ function isChromeOrSafariBrowser() {
     !ua.includes('brave') &&
     !ua.includes('duckduckgo');
 
+  const isEdge = ua.includes('edg') || ua.includes('edgios') || ua.includes('edga');
+
+  const isOpera = ua.includes('opr') || ua.includes('opera') || ua.includes('opios');
+
+  const isSamsungInternet = ua.includes('samsungbrowser');
+
   const isSafari = ua.includes('safari') &&
     vendor.includes('apple') &&
     !ua.includes('chrome') &&
@@ -2971,11 +2984,11 @@ function isChromeOrSafariBrowser() {
     !ua.includes('opera') &&
     !ua.includes('android');
 
-  return isChrome || isSafari;
+  return isChrome || isSafari || isEdge || isOpera || isSamsungInternet;
 }
 
-function shouldSuggestChromeOrSafari() {
-  return isEmbeddedApp() || !isChromeOrSafariBrowser();
+function shouldSuggestSupportedBrowser() {
+  return isEmbeddedApp() || !isSupportedBrowser();
 }
 
 function showEmbeddedWarning() {
@@ -2996,7 +3009,7 @@ function showEmbeddedWarning() {
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('android')) {
       window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
-        '#Intent;scheme=https;package=com.android.chrome;end;';
+        '#Intent;scheme=https;action=android.intent.action.VIEW;end;';
     } else {
       window.open(url, '_blank');
     }
