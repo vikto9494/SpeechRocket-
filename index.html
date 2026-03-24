@@ -412,36 +412,46 @@ html, body {
 /* Listening indicator */
 .listen-hud {
   position: absolute;
-  bottom: 105px;
-  left: 50%;
+  bottom: 122px;
+  left: calc(50% + 64px);
   transform: translateX(-50%);
   z-index: 25;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(13,27,75,0.34);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+  pointer-events: none;
 }
 .listen-label {
-  background: rgba(13,27,75,0.88);
-  backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255,255,255,0.2);
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
   color: rgba(255,255,255,0.9);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 6px 16px;
-  border-radius: 20px;
-  letter-spacing: 1px;
+  padding: 0;
+  border-radius: 0;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
+  text-shadow: 0 1px 8px rgba(13,27,75,0.35);
 }
 .listen-waves {
-  display: flex; align-items: center; gap: 4px; height: 24px;
+  display: flex; align-items: center; gap: 3px; height: 20px;
 }
 .listen-waves span {
   display: block;
-  width: 4px;
-  background: var(--accent);
+  width: 3px;
+  background: rgba(105,240,174,0.9);
   border-radius: 2px;
   animation: wave 1s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(105,240,174,0.28);
 }
 .listen-waves span:nth-child(1){ height:6px; animation-delay:0s; }
 .listen-waves span:nth-child(2){ height:14px; animation-delay:0.1s; }
@@ -451,6 +461,18 @@ html, body {
 @keyframes wave {
   0%,100%{ transform:scaleY(0.5); opacity:0.6; }
   50%{ transform:scaleY(1); opacity:1; }
+}
+
+@media (max-width: 420px) {
+  .listen-hud {
+    left: calc(50% + 54px);
+    bottom: 118px;
+    gap: 7px;
+    padding: 6px 10px;
+  }
+  .listen-label {
+    font-size: 11px;
+  }
 }
 
 /* Rocket area */
@@ -634,11 +656,13 @@ html, body {
 .lb-achievement-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--accent2); }
 .lb-achievement-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 .lb-qr-wrap {
+  display: flex;              /* Enable Flexbox layout */
+  justify-content: space-between; /* Left: first child, Right: second child */
   background: rgba(255,255,255,0.07);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
-  text-align: center;
+  /* Remove text-align: center; as Flexbox overrides it */
 }
 .lb-qr-title { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
 #qrcode { display: inline-block; background: #fff; padding: 8px; border-radius: 10px; }
