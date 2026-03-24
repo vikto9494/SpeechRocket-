@@ -910,8 +910,8 @@ textarea.donation-msg {
   flex-direction: column;
   gap: 0;
   padding: 1px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255,193,7,0.85), rgba(66,165,245,0.85) 42%, rgba(13,27,75,0.95));
+  border-radius: 14px;
+  background: #1b2f85;
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: 0 14px 30px rgba(7,12,42,0.34);
   overflow: hidden;
@@ -928,10 +928,10 @@ textarea.donation-msg {
 }
 .pay-iframe {
   width: 100%;
-  min-height: 222px;
+  min-height: 198px;
   border: none;
-  border-radius: 14px;
-  background: transparent;
+  border-radius: 13px;
+  background: #1b2f85;
   display: none;
 }
 .pay-error {
@@ -956,7 +956,7 @@ textarea.donation-msg {
     max-width: 100%;
   }
   .pay-iframe {
-    min-height: 214px;
+    min-height: 200px;
   }
 }
 
@@ -1336,7 +1336,7 @@ textarea.donation-msg {
         <div class="sup-option-num">1</div>
         Share the game with your friends
       </div>
-      <div class="sup-option-desc">Help them improve their English speech. Sharing is free!</div>
+      <div class="sup-option-desc">Help them improve their English speech!</div>
       <div class="sup-share-link">
         <input type="text" value="https://do.inream.com/speech-rocket.html" readonly id="shareInput">
         <button class="btn-copy" onclick="copyLink()">Copy</button>
@@ -1349,7 +1349,7 @@ textarea.donation-msg {
         <div class="sup-option-num">2</div>
         Send us a donation
       </div>
-      <div class="sup-option-desc">Help us build more language games and tools for everyone.</div>
+      <div class="sup-option-desc">Help us improve language games.</div>
 
       <!-- Amount selection -->
       <div class="amount-options">
@@ -1413,7 +1413,7 @@ textarea.donation-msg {
       <div class="pay-modal-amount" id="payDisplayAmount">$3</div>
       <div class="pay-form-stack">
         <label class="pay-field" for="payEmail">
-          <span class="pay-field-label">Email for receipt</span>
+          <span class="pay-field-label">Enter email for the receipt</span>
           <input type="email" class="pay-field-input" id="payEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
         </label>
       </div>
@@ -1422,7 +1422,7 @@ textarea.donation-msg {
         <iframe id="payIframe" name="payIframe" class="pay-iframe" allow="payment *"></iframe>
       </div>
       <div class="pay-error" id="payError" style="display:none"></div>
-      <button class="pay-submit" id="paySubmitBtn" onclick="submitPayment()">Continue to donation details</button>
+      <button class="pay-submit" id="paySubmitBtn" onclick="submitPayment()">Continue to donation</button>
       <div class="pay-secure">🔒 SSL Secure · 256-bit encryption</div>
     </div>
   </div>
