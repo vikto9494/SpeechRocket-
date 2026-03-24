@@ -919,10 +919,12 @@ textarea.donation-msg {
   display: none;
   flex-direction: column;
   gap: 10px;
-  padding: 0;
+  padding: 2px;
   border-radius: 16px;
-  background: transparent;
-  border: none;
+  background: linear-gradient(135deg, rgba(255,193,7,0.85), rgba(66,165,245,0.85) 42%, rgba(13,27,75,0.95));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 14px 30px rgba(7,12,42,0.34);
+  overflow: hidden;
 }
 .pay-card-shell.show {
   display: flex;
@@ -931,15 +933,17 @@ textarea.donation-msg {
   color: rgba(255,255,255,0.7);
   font-size: 12px;
   line-height: 1.4;
+  padding: 0 2px;
 }
 .pay-modal-loading {
   color: rgba(255,255,255,0.5); font-size: 14px;
+  padding: 0 2px;
 }
 .pay-iframe {
   width: 100%;
   min-height: 235px;
   border: none;
-  border-radius: 16px;
+  border-radius: 14px;
   background: transparent;
   display: none;
 }
@@ -1415,7 +1419,7 @@ textarea.donation-msg {
 <div class="pay-modal" id="payModal">
   <div class="pay-modal-card">
     <div class="pay-modal-header">
-      <h3>💳 Secure Payment</h3>
+      <h3>💛 Secure Donation</h3>
       <button class="pay-modal-close" id="payModalClose" onclick="closePayModal()">&times;</button>
     </div>
     <div class="pay-modal-body" id="payFormBody">
@@ -1433,7 +1437,7 @@ textarea.donation-msg {
         <iframe id="payIframe" name="payIframe" class="pay-iframe" allow="payment *"></iframe>
       </div>
       <div class="pay-error" id="payError" style="display:none"></div>
-      <button class="pay-submit" id="paySubmitBtn" onclick="submitPayment()">Continue to card details</button>
+      <button class="pay-submit" id="paySubmitBtn" onclick="submitPayment()">Continue to donation details</button>
       <div class="pay-secure">🔒 SSL Secure · 256-bit encryption</div>
     </div>
   </div>
@@ -2614,7 +2618,7 @@ function isValidEmail(email) {
 }
 
 function getPaySubmitBtnLabel() {
-  return STATE.paymentReady ? 'Pay $' + STATE.paymentAmount.toFixed(2) : 'Continue to card details';
+  return STATE.paymentReady ? 'Donate $' + STATE.paymentAmount.toFixed(2) : 'Continue to donation details';
 }
 
 function setPaymentError(message) {
@@ -2663,7 +2667,7 @@ function resetPaymentState(options = {}) {
   if (!keepEmail) emailInput.value = '';
   loading.style.display = 'none';
   submitBtn.disabled = false;
-  submitBtn.textContent = 'Continue to card details';
+  submitBtn.textContent = 'Continue to donation details';
   setPaymentError('');
 }
 
