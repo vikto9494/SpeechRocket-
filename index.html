@@ -892,10 +892,22 @@ html, body {
   transition: all 0.15s;
   -webkit-appearance: none;
 }
+.amount-btn span {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 3px;
+  color: rgba(255,255,255,0.56);
+}
 .amount-btn.selected {
   background: rgba(255,107,53,0.3);
   border-color: var(--accent);
   color: #fff;
+}
+.amount-btn.selected span {
+  color: rgba(255,255,255,0.88);
 }
 .amount-input {
   background: rgba(255,255,255,0.1);
@@ -1205,6 +1217,8 @@ textarea.donation-msg {
   position: fixed;
   bottom: 30px; left: 50%;
   transform: translateX(-50%) translateY(80px);
+  opacity: 0;
+  visibility: hidden;
   background: rgba(13,27,75,0.95);
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
@@ -1212,11 +1226,17 @@ textarea.donation-msg {
   border-radius: 20px;
   font-size: 13px; font-weight: 700;
   z-index: 9999;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
   pointer-events: none;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: min(90vw, 360px);
+  text-align: center;
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
 
 /* ═══════════════════════════════════════════════════════
    PERMISSIONS OVERLAY
@@ -1345,6 +1365,7 @@ textarea.donation-msg {
   font-size: 12px;
   line-height: 1.45;
   margin-top: 6px;
+  margin-bottom: 10px;
 }
 .settings-number {
   width: 100%;
@@ -1431,6 +1452,10 @@ textarea.donation-msg {
   background: linear-gradient(135deg, #FF6B35, #FF8F00);
   border: none;
 }
+.btn-inline--crypto {
+  background: linear-gradient(135deg,#1b5e20,#2e7d32);
+  border: none;
+}
 .settings-status {
   margin-top: 10px;
   padding: 12px 14px;
@@ -1508,6 +1533,39 @@ textarea.donation-msg {
 }
 .settings-share-actions {
   margin-top: 12px;
+}
+.custom-donate-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.custom-donate-card {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,193,7,0.12), rgba(255,107,53,0.14));
+  border: 1px solid rgba(255,193,7,0.22);
+}
+.custom-donate-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+}
+.custom-donate-sub {
+  margin-top: 5px;
+  color: rgba(255,255,255,0.68);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.amount-options--compact {
+  margin-top: 12px;
+}
+.amount-options--compact .amount-btn {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 92px;
+}
+.amount-input--compact {
+  margin-top: 10px;
 }
 .settings-warning {
   margin-top: 10px;
@@ -1715,6 +1773,10 @@ textarea.donation-msg {
       <div class="recognition-debug-label">Analyzed text</div>
       <div class="recognition-debug-value" id="recognitionDebugTranscript">No recorded text yet</div>
     </div>
+    <div class="recognition-debug-line">
+      <div class="recognition-debug-label">Accuracy Check</div>
+      <div class="recognition-debug-value" id="recognitionDebugAccuracy">Target: — | Spoken: — | Accuracy: — | Threshold: —</div>
+    </div>
   </div>
 
   <!-- Listening HUD -->
@@ -1816,7 +1878,10 @@ textarea.donation-msg {
     </div>
     <div class="result-buttons">
       <button class="btn-primary" id="resultContinueBtn">Continue 🏆</button>
-      <button class="btn-secondary" id="resultHelpBtn">Help us & feature request</button>
+      <button class="btn-secondary" id="resultHelpBtn">
+        Help us & feature request
+        <span class="btn-label-small">Unlock supporter achievement</span>
+      </button>
       <button class="btn-boost" onclick="window.open('https://inream.com','_blank')">
         Boost your language with our AI assistant
         <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
@@ -1843,7 +1908,10 @@ textarea.donation-msg {
     </div>
     <div class="lb-next-badge" id="lbNextBadge"></div>
     <button class="btn-primary" id="newFlightBtn">Start new flight 🚀</button>
-    <button class="btn-secondary" id="leaderboardHelpBtn">Help us & feature request</button>
+    <button class="btn-secondary" id="leaderboardHelpBtn">
+      Help us & feature request
+      <span class="btn-label-small">Unlock supporter achievement</span>
+    </button>
     <button class="btn-boost" id="leaderboardBoostBtn" onclick="window.open('https://inream.com','_blank')">
       Boost your language with our AI assistant
       <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
@@ -1875,16 +1943,16 @@ textarea.donation-msg {
         <div class="sup-option-num">2</div>
         Send us a donation
       </div>
-      <div class="sup-option-desc">Help us improve language games.</div>
+      <div class="sup-option-desc" id="supporterStatusNote">Help us improve language games and unlock a supporter achievement.</div>
       <div id="donationMain">
         <!-- Amount selection -->
         <div class="amount-options">
-          <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5</button>
-          <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10</button>
-          <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15</button>
-          <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20</button>
-          <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50</button>
-          <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100</button>
+          <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5<span>Bronze</span></button>
+          <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10<span>Bronze+</span></button>
+          <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15<span>Silver</span></button>
+          <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20<span>Silver+</span></button>
+          <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50<span>Gold</span></button>
+          <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100<span>Diamond</span></button>
         </div>
         <input type="number" class="amount-input" id="customAmount" placeholder="Or enter custom amount ($)" min="1">
         <textarea class="amount-input donation-msg" id="donationMsg" placeholder="Feature request or other (optional)" rows="1"></textarea>
@@ -1979,6 +2047,7 @@ textarea.donation-msg {
   <div class="modal-card">
     <div class="modal-head">
       <div class="modal-title">Game Settings</div>
+      <button class="modal-close" id="settingsCloseX" type="button">&times;</button>
     </div>
 
     <div class="settings-group">
@@ -2043,6 +2112,65 @@ textarea.donation-msg {
       <button class="btn-inline btn-inline--accent" id="customContentSaveBtn" type="button">Save content</button>
       <button class="btn-inline" id="customContentCancelBtn" type="button">Cancel</button>
     </div>
+    <div class="custom-donate-panel">
+      <div class="custom-donate-card">
+        <div class="custom-donate-title">Support Speech Rocket</div>
+        <div class="custom-donate-sub" id="customDonateNote">Donate here to unlock a supporter achievement while creating your custom game.</div>
+        <div class="amount-options amount-options--compact">
+          <button class="amount-btn" data-amount="5" onclick="selectAmount(5,this)">$5<span>Bronze</span></button>
+          <button class="amount-btn" data-amount="10" onclick="selectAmount(10,this)">$10<span>Bronze+</span></button>
+          <button class="amount-btn selected" data-amount="15" onclick="selectAmount(15,this)">$15<span>Silver</span></button>
+          <button class="amount-btn" data-amount="20" onclick="selectAmount(20,this)">$20<span>Silver+</span></button>
+          <button class="amount-btn" data-amount="50" onclick="selectAmount(50,this)">$50<span>Gold</span></button>
+          <button class="amount-btn" data-amount="100" onclick="selectAmount(100,this)">$100<span>Diamond</span></button>
+        </div>
+        <input type="number" class="amount-input amount-input--compact" id="customContentDonationAmount" placeholder="Or enter custom amount ($)" min="1">
+        <div class="settings-inline-actions">
+          <button class="btn-inline btn-inline--accent" id="customDonateBtn" type="button">Pay by Card</button>
+          <button class="btn-inline btn-inline--crypto" id="customCryptoDonateBtn" type="button">Crypto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="customCryptoModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Crypto Donation</div>
+      <button class="modal-close" id="customCryptoCloseX" type="button">&times;</button>
+    </div>
+    <div class="crypto-note">Choose the most convenient network and copy the address below. This window stays on top of the game.</div>
+    <div class="crypto-list">
+      <div class="crypto-item">
+        <div class="crypto-name">BTC</div>
+        <div class="crypto-addr">1AkiFuMB4R4vt3Uzsi5mFY2ou7rq26V9PH</div>
+        <button class="btn-copy-addr" onclick="copyAddr('btc')">Copy</button>
+      </div>
+      <div class="crypto-item">
+        <div class="crypto-name">BSC USDT</div>
+        <div class="crypto-addr">0x35b46cf3ffc0cc7747f34f3ab01b45bcf41b1a0d</div>
+        <button class="btn-copy-addr" onclick="copyAddr('bsc')">Copy</button>
+      </div>
+      <div class="crypto-item">
+        <div class="crypto-name">Polygon USDC/USDT</div>
+        <div class="crypto-addr">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+        <button class="btn-copy-addr" onclick="copyAddr('poly')">Copy</button>
+      </div>
+      <div class="crypto-item">
+        <div class="crypto-name">ETH USDC/USDT</div>
+        <div class="crypto-addr">0xE65f162D76416BD22227eF0D3FB8B8E489C334D8</div>
+        <button class="btn-copy-addr" onclick="copyAddr('eth')">Copy</button>
+      </div>
+      <div class="crypto-item">
+        <div class="crypto-name">TON</div>
+        <div class="crypto-addr">UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI</div>
+        <button class="btn-copy-addr" onclick="copyAddr('ton')">Copy</button>
+      </div>
+    </div>
+    <div class="settings-inline-actions">
+      <button class="btn-inline" id="customCryptoCloseBtn" type="button">Close</button>
+    </div>
   </div>
 </div>
 
@@ -2055,6 +2183,7 @@ textarea.donation-msg {
 const URL_PARAMS = new URLSearchParams(window.location.search);
 const SETTINGS_STORAGE_KEY = 'srGameSettingsV1';
 const USER_LOG_ID_STORAGE_KEY = 'srUserLogId';
+const SUPPORTER_STORAGE_KEY = 'srSupporterAchievement';
 const DEFAULT_GAME_SETTINGS = Object.freeze({
   initialSpeedSec: 8.5,
   accelerationSec: 1.5,
@@ -2124,6 +2253,13 @@ const CONFIG = {
     eth:  '0xE65f162D76416BD22227eF0D3FB8B8E489C334D8',
     ton:  'UQAzTM5lpoig0pp6B_DeI9_FZqMMkagVRSGZzMF5Fj21xreI'
   },
+
+  SUPPORTER_ACHIEVEMENTS: [
+    { min: 100, icon: '💎', title: 'Diamond Supporter' },
+    { min: 50, icon: '🥇', title: 'Gold Supporter' },
+    { min: 15, icon: '🥈', title: 'Silver Supporter' },
+    { min: 5, icon: '🥉', title: 'Bronze Supporter' }
+  ],
 
   // Achievements [wordsNeeded, icon, title]
   ACHIEVEMENTS: [
@@ -2265,6 +2401,7 @@ const STATE = {
   userLogId: '',
   settingsWasPlaying: false,
   customVictory: false,
+  supporterAchievement: null,
 };
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -2412,6 +2549,47 @@ function getOrCreateUserLogId() {
     : `sr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   localStorage.setItem(USER_LOG_ID_STORAGE_KEY, generated);
   return generated;
+}
+
+function getSupporterAchievementForAmount(amount) {
+  return CONFIG.SUPPORTER_ACHIEVEMENTS.find((tier) => amount >= tier.min) || null;
+}
+
+function loadSupporterAchievement() {
+  try {
+    const raw = localStorage.getItem(SUPPORTER_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveSupporterAchievement(amount) {
+  const nextTier = getSupporterAchievementForAmount(amount);
+  if (!nextTier) return null;
+  const current = STATE.supporterAchievement;
+  if (!current || nextTier.min > current.min) {
+    STATE.supporterAchievement = nextTier;
+    localStorage.setItem(SUPPORTER_STORAGE_KEY, JSON.stringify(nextTier));
+  }
+  return STATE.supporterAchievement;
+}
+
+function syncSupporterAchievementUi() {
+  const supporterNote = document.getElementById('supporterStatusNote');
+  const customDonateNote = document.getElementById('customDonateNote');
+  const tier = STATE.supporterAchievement;
+  if (supporterNote) {
+    supporterNote.textContent = tier
+      ? `Help us improve language games. Unlocked: ${tier.icon} ${tier.title}.`
+      : 'Help us improve language games and unlock a supporter achievement.';
+  }
+  if (customDonateNote) {
+    customDonateNote.textContent = tier
+      ? `Current achievement: ${tier.icon} ${tier.title}. Donate more to reach a higher supporter tier.`
+      : 'Donate here to unlock a supporter achievement while creating your custom game.';
+  }
 }
 
 function getShareableSettingsUrl(settings = STATE.settings) {
@@ -2580,9 +2758,16 @@ function updateRecognitionDebugTranscript(text) {
   transcriptEl.textContent = text || 'No recorded text yet';
 }
 
+function updateRecognitionDebugAccuracy(message) {
+  const accuracyEl = document.getElementById('recognitionDebugAccuracy');
+  if (!accuracyEl) return;
+  accuracyEl.textContent = message || 'Target: — | Spoken: — | Accuracy: — | Threshold: —';
+}
+
 function resetRecognitionDebug() {
   updateRecognitionDebugStatus('Waiting for recording to start');
   updateRecognitionDebugTranscript('');
+  updateRecognitionDebugAccuracy('');
 }
 
 function initRecognition() {
@@ -2650,10 +2835,14 @@ function initRecognition() {
     updateRecognitionDebugTranscript(allText.trim());
 
     // Check accuracy against current target
-    const accuracy = calcAccuracy(allText, STATE.currentTarget);
+    const debugInfo = getAccuracyDebugInfo(allText, STATE.currentTarget);
+    const accuracy = debugInfo.accuracy;
     const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
       ? CONFIG.ACCURACY_THRESHOLD_EARLY
       : CONFIG.ACCURACY_THRESHOLD_NORMAL;
+    updateRecognitionDebugAccuracy(
+      `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount}) | Threshold: ${threshold}% | ${accuracy >= threshold ? 'PASS' : 'MISS'}`
+    );
 
     console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
 
@@ -2703,26 +2892,44 @@ function normalizeRecognitionText(text) {
     .trim();
 }
 
-function calcAccuracy(transcript, target) {
-  const tNorm = normalizeRecognitionText(transcript);
+function getAccuracyDebugInfo(transcript, target) {
+  const transcriptNorm = normalizeRecognitionText(transcript);
   const targetNorm = normalizeRecognitionText(target);
   const targetWords = targetNorm.split(/\s+/).filter(Boolean);
-  const spokenWords = tNorm.split(/\s+/).filter(Boolean);
+  const spokenWords = transcriptNorm.split(/\s+/).filter(Boolean);
 
-  if (targetWords.length === 0) return 0;
+  if (targetWords.length === 0) {
+    return {
+      accuracy: 0,
+      transcriptNorm,
+      targetNorm,
+      matchCount: 0,
+      targetCount: 0
+    };
+  }
 
   let matchCount = 0;
   for (const tw of targetWords) {
     if (spokenWords.some(sw => {
       if (sw === tw) return true;
-      // Allow 1 char edit distance for short words, 2 for longer
       const maxDist = tw.length <= 4 ? 1 : 2;
       return levenshtein(sw, tw) <= maxDist;
     })) {
       matchCount++;
     }
   }
-  return (matchCount / targetWords.length) * 100;
+
+  return {
+    accuracy: (matchCount / targetWords.length) * 100,
+    transcriptNorm,
+    targetNorm,
+    matchCount,
+    targetCount: targetWords.length
+  };
+}
+
+function calcAccuracy(transcript, target) {
+  return getAccuracyDebugInfo(transcript, target).accuracy;
 }
 
 function levenshtein(a, b) {
@@ -2845,6 +3052,10 @@ function nextWord() {
   STATE.wordActive = true;
   STATE.wordCorrect = false;
   STATE.listeningEnabled = false; // will be unlocked by speakWord after TTS ends
+  const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
+    ? CONFIG.ACCURACY_THRESHOLD_EARLY
+    : CONFIG.ACCURACY_THRESHOLD_NORMAL;
+  updateRecognitionDebugAccuracy(`Target: ${normalizeRecognitionText(word) || '—'} | Spoken: — | Accuracy: 0.0% (0/${normalizeRecognitionText(word).split(/\s+/).filter(Boolean).length || 0}) | Threshold: ${threshold}% | waiting`);
 
   // Show listening HUD
   document.getElementById('listenHud').style.display = 'flex';
@@ -3704,8 +3915,31 @@ let allpayHostedFields = null;
 function selectAmount(amount, btn) {
   STATE.donationAmount = amount;
   document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  document.getElementById('customAmount').value = '';
+  document.querySelectorAll(`.amount-btn[data-amount="${amount}"]`).forEach(b => b.classList.add('selected'));
+  if (btn) btn.classList.add('selected');
+  const supportCustomAmount = document.getElementById('customAmount');
+  const customModalAmount = document.getElementById('customContentDonationAmount');
+  if (supportCustomAmount) supportCustomAmount.value = '';
+  if (customModalAmount) customModalAmount.value = '';
+}
+
+function syncCustomDonationAmount(value, source = '') {
+  const normalized = value ? String(value) : '';
+  const supportCustomAmount = document.getElementById('customAmount');
+  const customModalAmount = document.getElementById('customContentDonationAmount');
+  if (source !== 'support' && supportCustomAmount) supportCustomAmount.value = normalized;
+  if (source !== 'custom-modal' && customModalAmount) customModalAmount.value = normalized;
+  if (normalized) {
+    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+  }
+}
+
+function openCryptoDonationFromCustom() {
+  document.getElementById('customCryptoModal').classList.add('show');
+}
+
+function closeCustomCryptoModal() {
+  document.getElementById('customCryptoModal').classList.remove('show');
 }
 
 async function sha256(str) {
@@ -3759,7 +3993,14 @@ function isValidEmail(email) {
 }
 
 function getPaySubmitBtnLabel() {
-  return STATE.paymentReady ? 'Donate $' + STATE.paymentAmount.toFixed(2) : 'Continue to donation';
+  const amount = STATE.paymentAmount || getDonationAmount();
+  const tier = getSupporterAchievementForAmount(amount);
+  if (STATE.paymentReady) {
+    return tier
+      ? `Donate $${STATE.paymentAmount.toFixed(2)} · ${tier.title}`
+      : 'Donate $' + STATE.paymentAmount.toFixed(2);
+  }
+  return tier ? `Continue to ${tier.title}` : 'Continue to donation';
 }
 
 function setPaymentError(message) {
@@ -3881,8 +4122,10 @@ function getHostedFieldsInstance() {
       onSuccess: function() {
         const email = document.getElementById('payEmail').value.trim();
         if (email) localStorage.setItem('srDonationEmail', email);
+        const supporterTier = saveSupporterAchievement(STATE.paymentAmount || getDonationAmount());
+        syncSupporterAchievementUi();
         closePayModal();
-        showThankYou();
+        showThankYou(supporterTier);
       },
       onError: function(error_n, error_msg) {
         setPaymentError(error_msg || ('Payment error: ' + error_n));
@@ -3975,7 +4218,16 @@ function closePayModal() {
   resetPaymentState();
 }
 
-function showThankYou() {
+function showThankYou(supporterTier = STATE.supporterAchievement) {
+  const title = document.querySelector('#thankYouModal h2');
+  const text = document.querySelector('#thankYouModal p');
+  if (title && text && supporterTier) {
+    title.textContent = `${supporterTier.icon} ${supporterTier.title} unlocked!`;
+    text.innerHTML = `Your payment was successful.<br>Thank you for supporting Speech Rocket.`;
+  } else if (title && text) {
+    title.textContent = 'Thank you!';
+    text.innerHTML = 'Your payment was successful.<br>Thank you!';
+  }
   document.getElementById('thankYouModal').classList.add('show');
 }
 
@@ -4001,7 +4253,7 @@ function closeCrypto() {
 function copyAddr(coin) {
   const addr = CONFIG.CRYPTO_ADDRS[coin];
   copyToClipboard(addr);
-  showToast('✓ Address copied!');
+  showToast('Address is copied. Thanks for the crypto donation you are going to make 🎉', 4200);
   gaEvent('crypto_copy', { coin });
 }
 
@@ -4352,7 +4604,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load best score
   STATE.bestScore = parseInt(localStorage.getItem('srBestScore')) || 0;
   STATE.userLogId = getOrCreateUserLogId();
+  STATE.supporterAchievement = loadSupporterAchievement();
   applySettingsState(loadSettingsFromUrl());
+  syncSupporterAchievementUi();
 
   // Random player count, updates slowly
   function randomizePlayers() {
@@ -4416,6 +4670,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showPage('page-result');
   });
 
+  document.getElementById('settingsCloseX').addEventListener('click', () => closeSettingsMenu());
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeSettingsMenu());
   document.getElementById('settingsApplyBtn').addEventListener('click', applySettingsAndRestart);
   document.getElementById('settingsRestoreBtn').addEventListener('click', restoreDefaultSettingsAndRestart);
@@ -4425,11 +4680,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('customContentCloseX').addEventListener('click', () => closeCustomContentWindow({ restoreDraft: true }));
   document.getElementById('customContentSaveBtn').addEventListener('click', saveCustomContentDraft);
   document.getElementById('customContentCancelBtn').addEventListener('click', () => closeCustomContentWindow({ restoreDraft: true }));
+  document.getElementById('customDonateBtn').addEventListener('click', () => payByCard());
+  document.getElementById('customCryptoDonateBtn').addEventListener('click', openCryptoDonationFromCustom);
+  document.getElementById('customCryptoCloseX').addEventListener('click', closeCustomCryptoModal);
+  document.getElementById('customCryptoCloseBtn').addEventListener('click', closeCustomCryptoModal);
+  document.getElementById('customContentDonationAmount').addEventListener('input', (event) => {
+    syncCustomDonationAmount(event.target.value, 'custom-modal');
+  });
   document.getElementById('customContentInput').addEventListener('input', (event) => {
     if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
     STATE.pendingSettings.customContent = event.target.value;
     updateCustomContentUi(event.target.value);
     updateCustomContentSummary(event.target.value);
+  });
+  document.getElementById('customAmount').addEventListener('input', (event) => {
+    syncCustomDonationAmount(event.target.value, 'support');
   });
 
   document.getElementById('settingsInitialSpeedChips').querySelectorAll('.settings-chip').forEach((chip) => {
