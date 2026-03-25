@@ -2806,6 +2806,11 @@ let recActive = false;
 let suppressRecognitionRestart = false;
 let recognitionDebugEntries = [];
 let micRecoveryMode = false;
+let lastRecognitionDebugUiAt = 0;
+
+function isRecognitionDebugEnabled() {
+  return !!CONFIG.recognition_debug_mode;
+}
 
 function syncRecognitionDebugMode() {
   const panel = document.getElementById('recognitionDebugPanel');
@@ -2814,24 +2819,28 @@ function syncRecognitionDebugMode() {
 }
 
 function updateRecognitionDebugStatus(message) {
+  if (!isRecognitionDebugEnabled()) return;
   const statusEl = document.getElementById('recognitionDebugStatus');
   if (!statusEl) return;
   statusEl.textContent = message;
 }
 
 function updateRecognitionDebugTranscript(text) {
+  if (!isRecognitionDebugEnabled()) return;
   const transcriptEl = document.getElementById('recognitionDebugTranscript');
   if (!transcriptEl) return;
   transcriptEl.textContent = text || 'No recorded text yet';
 }
 
 function updateRecognitionDebugAccuracy(message) {
+  if (!isRecognitionDebugEnabled()) return;
   const accuracyEl = document.getElementById('recognitionDebugAccuracy');
   if (!accuracyEl) return;
   accuracyEl.textContent = message || 'Target: — | Spoken: — | Accuracy: — | Threshold: —';
 }
 
 function renderRecognitionDebugLog() {
+  if (!isRecognitionDebugEnabled()) return;
   const logEl = document.getElementById('recognitionDebugLog');
   if (!logEl) return;
   logEl.textContent = recognitionDebugEntries.length
@@ -2841,6 +2850,7 @@ function renderRecognitionDebugLog() {
 }
 
 function appendRecognitionDebugLog(message) {
+  if (!isRecognitionDebugEnabled()) return;
   const stamp = new Date().toLocaleTimeString();
   recognitionDebugEntries.push(`[${stamp}] ${message}`);
   if (recognitionDebugEntries.length > 120) {
@@ -2851,6 +2861,7 @@ function appendRecognitionDebugLog(message) {
 
 function clearRecognitionDebugLog() {
   recognitionDebugEntries = [];
+  if (!isRecognitionDebugEnabled()) return;
   renderRecognitionDebugLog();
 }
 
@@ -2860,6 +2871,7 @@ function copyRecognitionDebugLog() {
 }
 
 function resetRecognitionDebug() {
+  lastRecognitionDebugUiAt = 0;
   updateRecognitionDebugStatus('Waiting for recording to start');
   updateRecognitionDebugTranscript('');
   updateRecognitionDebugAccuracy('');
@@ -2882,17 +2894,17 @@ function initRecognition() {
   recognition.onstart = () => {
     recActive = true;
     updateRecognitionDebugStatus('System started recording');
-    console.log('[SpeechRocket] 🎤 Recognition started');
+    if (isRecognitionDebugEnabled()) console.log('[SpeechRocket] 🎤 Recognition started');
   };
 
   recognition.onend = () => {
     recActive = false;
     updateRecognitionDebugStatus('System stopped recording');
-    console.log('[SpeechRocket] ⏸ Recognition ended');
+    if (isRecognitionDebugEnabled()) console.log('[SpeechRocket] ⏸ Recognition ended');
     // Auto-restart if game is active
     if (STATE.isPlaying && permissionGranted && !suppressRecognitionRestart) {
       setTimeout(() => {
-        try { recognition.start(); } catch(e) { console.log('[SpeechRocket] restart err:', e); }
+        try { recognition.start(); } catch(e) { if (isRecognitionDebugEnabled()) console.log('[SpeechRocket] restart err:', e); }
       }, 200);
     }
   };
@@ -2915,17 +2927,24 @@ function initRecognition() {
       const topText = result[0]?.transcript || '';
       const topConf = result[0]?.confidence || 0;
       const isFinal = result.isFinal;
+      const debugEnabled = isRecognitionDebugEnabled();
+      const now = performance.now();
+      const shouldRefreshDebugUi = debugEnabled && (isFinal || now - lastRecognitionDebugUiAt >= 140);
 
-      console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${topText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
+      if (debugEnabled) {
+        console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${topText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
+      }
 
       // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
       if (!STATE.listeningEnabled) {
-        console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
+        if (debugEnabled) console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
         continue;
       }
 
       if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
-      updateRecognitionDebugTranscript(topText.trim());
+      if (shouldRefreshDebugUi) {
+        updateRecognitionDebugTranscript(topText.trim());
+      }
 
       // Check accuracy against the top alternative immediately for lower latency.
       const debugInfo = getAccuracyDebugInfo(topText, STATE.currentTarget);
@@ -2937,10 +2956,17 @@ function initRecognition() {
         ? debugInfo.perWordScores.every((score) => score > threshold)
         : accuracy >= threshold;
       const accuracyMessage = `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount} strong) | Threshold: ${threshold}% | ${passesThreshold ? 'PASS' : 'MISS'} | ${debugInfo.scoredMatches.join(', ')}`;
-      updateRecognitionDebugAccuracy(accuracyMessage);
-      appendRecognitionDebugLog(`${isFinal ? 'FINAL' : 'INTERIM'} | ${accuracyMessage}`);
+      if (shouldRefreshDebugUi) {
+        lastRecognitionDebugUiAt = now;
+        updateRecognitionDebugAccuracy(accuracyMessage);
+      }
+      if (debugEnabled && isFinal) {
+        appendRecognitionDebugLog(`FINAL | ${accuracyMessage}`);
+      }
 
-      console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+      if (debugEnabled) {
+        console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+      }
 
       if (passesThreshold) {
         wordCorrect(accuracy);
@@ -2950,9 +2976,11 @@ function initRecognition() {
   };
 
   // Log speech events
-  ['audiostart','audioend','soundstart','soundend','speechstart','speechend','nomatch'].forEach(ev => {
-    recognition.addEventListener(ev, () => console.log(`[SpeechRocket] EVENT: ${ev.toUpperCase()}`));
-  });
+  if (isRecognitionDebugEnabled()) {
+    ['audiostart','audioend','soundstart','soundend','speechstart','speechend','nomatch'].forEach(ev => {
+      recognition.addEventListener(ev, () => console.log(`[SpeechRocket] EVENT: ${ev.toUpperCase()}`));
+    });
+  }
 }
 
 function numberToWords(num) {
@@ -3086,7 +3114,7 @@ function startRecognition() {
   if (!recognition) return;
   if (!recActive) {
     try { recognition.start(); }
-    catch(e) { console.log('[SpeechRocket] start err:', e); }
+    catch(e) { if (isRecognitionDebugEnabled()) console.log('[SpeechRocket] start err:', e); }
   }
 }
 
