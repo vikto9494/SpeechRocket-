@@ -1519,6 +1519,11 @@ textarea.donation-msg {
     </div>
     <div class="lb-next-badge" id="lbNextBadge"></div>
     <button class="btn-primary" id="newFlightBtn">Start new flight 🚀</button>
+    <button class="btn-secondary" id="leaderboardHelpBtn">Help us & feature request</button>
+    <button class="btn-boost" id="leaderboardBoostBtn" onclick="window.open('https://inream.com','_blank')">
+      Boost your language with our AI assistant
+      <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
+    </button>
   </div>
 </div>
 
@@ -2026,9 +2031,45 @@ function initRecognition() {
   });
 }
 
+function numberToWords(num) {
+  const ones = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+  if (!Number.isInteger(num) || num < 0) return String(num);
+  if (num < 10) return ones[num];
+  if (num < 20) return teens[num - 10];
+  if (num < 100) {
+    const tenWord = tens[Math.floor(num / 10)];
+    const remainder = num % 10;
+    return remainder ? `${tenWord} ${ones[remainder]}` : tenWord;
+  }
+  if (num < 1000) {
+    const hundredWord = `${ones[Math.floor(num / 100)]} hundred`;
+    const remainder = num % 100;
+    return remainder ? `${hundredWord} ${numberToWords(remainder)}` : hundredWord;
+  }
+  if (num < 10000) {
+    const thousandWord = `${ones[Math.floor(num / 1000)]} thousand`;
+    const remainder = num % 1000;
+    return remainder ? `${thousandWord} ${numberToWords(remainder)}` : thousandWord;
+  }
+  return String(num);
+}
+
+function normalizeRecognitionText(text) {
+  return text
+    .toLowerCase()
+    .replace(/\b\d+\b/g, digits => numberToWords(parseInt(digits, 10)))
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function calcAccuracy(transcript, target) {
-  const tNorm = transcript.toLowerCase().replace(/[^a-z\s]/g, '').trim();
-  const targetWords = target.toLowerCase().replace(/[^a-z\s]/g, '').trim().split(/\s+/).filter(Boolean);
+  const tNorm = normalizeRecognitionText(transcript);
+  const targetNorm = normalizeRecognitionText(target);
+  const targetWords = targetNorm.split(/\s+/).filter(Boolean);
   const spokenWords = tNorm.split(/\s+/).filter(Boolean);
 
   if (targetWords.length === 0) return 0;
@@ -2574,6 +2615,69 @@ function playSuccessSound() {
 
 let ttsSpeaking = false;
 let ttsResumeTimer = null;
+let bestEnglishVoice = null;
+
+function isAppleWebKitTTS() {
+  const ua = navigator.userAgent;
+  const isAppleDevice = /iPhone|iPad|iPod|Macintosh/.test(ua);
+  const isWebKit = /AppleWebKit/i.test(ua);
+  return isAppleDevice && isWebKit;
+}
+
+function scoreEnglishVoice(voice) {
+  const name = (voice.name || '').toLowerCase();
+  const lang = (voice.lang || '').toLowerCase();
+  let score = 0;
+
+  if (lang === 'en-us') score += 80;
+  else if (lang.startsWith('en-us')) score += 75;
+  else if (lang.startsWith('en-')) score += 55;
+  else if (lang.startsWith('en')) score += 45;
+
+  if (voice.default) score += 18;
+  if (voice.localService) score += 10;
+
+  if (/(enhanced|premium|natural|neural|wavenet|studio|siri|alloy)/.test(name)) score += 35;
+  if (/(ava|allison|samantha|karen|moira|daniel|serena|arthur|nicky|aaron|jenny|aria|guy|ryan|libby|sonia|davis|mark)/.test(name)) score += 28;
+  if (/(google us english|microsoft aria|microsoft jenny|microsoft guy|microsoft davis)/.test(name)) score += 24;
+
+  if (/(fred|zarvox|bad news|bahh|bells|boing|bubbles|cellos|good news|organ|trinoids|whisper|novelty)/.test(name)) score -= 120;
+  if (/(compact)/.test(name)) score -= 20;
+
+  return score;
+}
+
+function getBestEnglishVoice() {
+  if (!window.speechSynthesis) return null;
+
+  const voices = window.speechSynthesis.getVoices();
+  const englishVoices = voices.filter(v => (v.lang || '').toLowerCase().startsWith('en'));
+  if (!englishVoices.length) return null;
+
+  const ranked = [...englishVoices].sort((a, b) => scoreEnglishVoice(b) - scoreEnglishVoice(a));
+  const topVoice = ranked[0] || null;
+
+  // In Apple WebKit, forcing a mediocre listed voice can sound worse than the platform default.
+  // If we don't find one of the stronger known voices, let the browser choose its default voice.
+  if (isAppleWebKitTTS()) {
+    const topName = (topVoice?.name || '').toLowerCase();
+    const looksHighQuality = /(samantha|ava|allison|karen|moira|daniel|serena|siri|enhanced|premium)/.test(topName);
+    if (!looksHighQuality && ranked.some(v => v.default)) {
+      return null;
+    }
+  }
+
+  return topVoice;
+}
+
+function refreshBestEnglishVoice() {
+  bestEnglishVoice = getBestEnglishVoice();
+  if (bestEnglishVoice) {
+    console.log(`[SpeechRocket] 🔊 Selected TTS voice: ${bestEnglishVoice.name} (${bestEnglishVoice.lang})`);
+  } else {
+    console.log('[SpeechRocket] 🔊 Using browser default TTS voice');
+  }
+}
 
 function reopenRecognitionForPlayer(gen, source) {
   if (STATE.wordGeneration !== gen) return;
@@ -2606,12 +2710,13 @@ function speakWord(text) {
     utter.pitch = CONFIG.TTS_PITCH;
     utter.volume = CONFIG.TTS_VOLUME;
 
-    // Prefer a native English voice
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith('en-US') && v.localService)
-      || voices.find(v => v.lang.startsWith('en-US'))
-      || voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
+    if (!bestEnglishVoice) {
+      refreshBestEnglishVoice();
+    }
+    if (bestEnglishVoice) {
+      utter.voice = bestEnglishVoice;
+      utter.lang = bestEnglishVoice.lang || 'en-US';
+    }
 
     utter.onstart = () => {
       ttsSpeaking = true;
@@ -3476,7 +3581,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Voices preload for iOS
   window.speechSynthesis?.getVoices();
   if (window.speechSynthesis) {
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    refreshBestEnglishVoice();
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+      refreshBestEnglishVoice();
+    };
   }
 
   // Start clouds in idle state
@@ -3494,6 +3603,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('resultHelpBtn').addEventListener('click', () => {
     gaEvent('support_page_open', { from: 'result' });
+    showPage('page-support');
+  });
+
+  document.getElementById('leaderboardHelpBtn').addEventListener('click', () => {
+    gaEvent('support_page_open', { from: 'leaderboard' });
     showPage('page-support');
   });
 
