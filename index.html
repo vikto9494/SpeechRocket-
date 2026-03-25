@@ -38,6 +38,9 @@
   --sky-bot: #42A5F5;
   --sky-dawn: #90CAF9;
   --cloud: rgba(255,255,255,0.9);
+  --game-rocket-width: 140px;
+  --game-rocket-height: 220px;
+  --game-rocket-clearance: 8px;
   --rocket-fire: #FF6B35;
   --rocket-body: #E3F2FD;
   --accent: #FF6B35;
@@ -412,7 +415,7 @@ html, body {
 /* Listening indicator */
 .listen-hud {
   position: absolute;
-  bottom: 105px;
+  bottom: calc(var(--game-rocket-height) + var(--game-rocket-clearance) - 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
@@ -460,7 +463,7 @@ html, body {
 @media (max-width: 420px) {
   .listen-hud {
     left: 50%;
-    bottom: 102px;
+    bottom: calc(var(--game-rocket-height) + var(--game-rocket-clearance) - 8px);
   }
   .listen-label {
     font-size: 12px;
@@ -476,7 +479,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 8px;
+  padding-bottom: var(--game-rocket-clearance);
 }
 .rocket-label {
   font-size: 10px;
@@ -490,8 +493,8 @@ html, body {
   order: 1;
 }
 .rocket-wrapper {
-  width: 70px;
-  height: 110px;
+  width: var(--game-rocket-width);
+  height: var(--game-rocket-height);
   position: relative;
   filter: drop-shadow(0 0 15px rgba(255,107,53,0.6));
 }
