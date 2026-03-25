@@ -20,12 +20,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5Y6H2632K"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
+    gtag('config', 'G-D5Y6H2632K');
+    gtag('config', 'AW-17139421987');
   </script>
 
 <style>
@@ -1925,8 +1926,7 @@ textarea.donation-msg {
       <div class="victory-title">Custom Mission Complete</div>
       <div class="victory-text" id="victoryText">You pronounced the whole custom sequence in order.</div>
       <div class="victory-actions">
-        <button class="btn-primary" id="victoryReplayBtn">Play again</button>
-        <button class="btn-secondary" id="victoryCloseBtn">Close</button>
+        <button class="btn-primary" id="victoryResultsBtn">See results</button>
       </div>
     </div>
   </div>
@@ -1935,8 +1935,8 @@ textarea.donation-msg {
 <!-- ═══════════════════════ PAGE: RESULT ═══════════════════════ -->
 <div class="page" id="page-result">
   <div class="result-inner">
-    <div class="section-title">💥 Crash!</div>
-    <div class="result-stopped-by">You were stopped by</div>
+    <div class="section-title" id="resultTitle">💥 Crash!</div>
+    <div class="result-stopped-by" id="resultSubtitle">You were stopped by</div>
     <div class="result-word" id="resultWord">—</div>
     <div class="result-score-card">
       <div class="result-score-label">Score</div>
@@ -1963,7 +1963,7 @@ textarea.donation-msg {
         Help us & request feature
         <span class="btn-label-small">Unlock supporter achievement</span>
       </button>
-      <button class="btn-boost action-card-btn" onclick="window.open('https://inream.com','_blank')">
+      <button class="btn-boost action-card-btn" id="resultBoostBtn">
         Boost your language with our AI assistant
         <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
       </button>
@@ -1997,7 +1997,7 @@ textarea.donation-msg {
       Help us & request feature
       <span class="btn-label-small">Unlock supporter achievement</span>
     </button>
-    <button class="btn-boost action-card-btn" id="leaderboardBoostBtn" onclick="window.open('https://inream.com','_blank')">
+    <button class="btn-boost action-card-btn" id="leaderboardBoostBtn">
       Boost your language with our AI assistant
       <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
     </button>
@@ -2327,7 +2327,7 @@ const CONFIG = {
   GAME_URL: 'https://do.inream.com/speech-rocket.html',
 
   // Google Analytics ID
-  GA_ID: 'G-XXXXXXXXXX',
+  GA_ID: 'G-D5Y6H2632K',
 
   // AllPay credentials
   ALLPAY_LOGIN: 'pp1005009',
@@ -3342,7 +3342,7 @@ function startGame() {
   updateMeterDisplay();
   startCloudAnimation();
 
-  gaEvent('game_start', { attempt: STATE.attempts });
+  gaEvent('speech-rocket-game-started');
 
   setTimeout(() => {
     startRecognition();
@@ -3538,11 +3538,9 @@ function wordMissed() {
   updateRecognitionDebugStatus('System stopped recording');
   stopRecognition();
 
-  gaEvent('result', {
-    score: calcScore(),
-    meters: STATE.meters,
-    correct_words: STATE.correctCount,
-    accuracy: avgAccuracy()
+  gaEvent('speech-rocket-game-finished', {
+    'correctly-pronounced-words-before-this': STATE.correctCount,
+    score: calcScore()
   });
 
   setTimeout(() => showResultPage(), 1100);
@@ -3583,6 +3581,9 @@ function cancelCurrentWord() {
 
 function skipToFullPhrases() {
   if (!STATE.isPlaying) return;
+  gaEvent('speech-rocket-game-advanced', {
+    'correctly-pronounced-words-before-this': STATE.correctCount
+  });
   cancelCurrentWord();
 
   // Jump seqIndex past singles+pairs to the full-phrases tier
@@ -3739,10 +3740,9 @@ function completeCustomGame() {
   document.getElementById('pauseBtn').innerHTML = '&#9208;';
   playVictorySound();
   showVictoryOverlay();
-  gaEvent('custom_game_complete', {
-    correct_targets: STATE.correctCount,
-    meters: STATE.meters,
-    user_log_id: STATE.userLogId
+  gaEvent('speech-rocket-game-finished', {
+    'correctly-pronounced-words-before-this': STATE.correctCount,
+    score: calcScore()
   });
 }
 
@@ -3758,11 +3758,12 @@ function openSettingsMenu() {
     STATE.settingsWasPlaying = false;
   }
   modal.classList.add('show');
+  gaEvent('speech-rocket-game-setting-opened');
 }
 
 function openTutorShareFlow() {
   openSettingsMenu();
-  gaEvent('tutor_share_flow_open');
+  gaEvent('speech-rocket-tutor');
 }
 
 function closeSettingsMenu({ resumeGame = true } = {}) {
@@ -3810,6 +3811,9 @@ function saveCustomContentDraft() {
   STATE.pendingSettings.customContent = cleaned;
   updateCustomContentUi(cleaned);
   updateCustomContentSummary(cleaned);
+  gaEvent('speech-rocket-game-custom-content-set', {
+    'cusom-content': cleaned
+  });
   closeCustomContentWindow({ restoreDraft: false });
 }
 
@@ -3822,13 +3826,20 @@ function applySettingsAndRestart() {
     return;
   }
   applySettingsState(nextSettings);
+  gaEvent('speech-rocket-game-setting-result', {
+    'applied-settings-values': getAppliedSettingsAnalyticsValue(nextSettings)
+  });
   closeSettingsMenu({ resumeGame: false });
   restartGameWithCurrentSettings();
   showToast('Settings applied');
 }
 
 function restoreDefaultSettingsAndRestart() {
-  applySettingsState(getDefaultSettings());
+  const defaultSettings = getDefaultSettings();
+  applySettingsState(defaultSettings);
+  gaEvent('speech-rocket-game-setting-result', {
+    'applied-settings-values': getAppliedSettingsAnalyticsValue(defaultSettings)
+  });
   closeSettingsMenu({ resumeGame: false });
   restartGameWithCurrentSettings();
   showToast('Default settings restored');
@@ -3845,9 +3856,8 @@ function shareCustomGame() {
   const url = getShareableSettingsUrl(nextSettings);
   copyToClipboard(url);
   showToast('✓ Custom game link copied!');
-  gaEvent('custom_game_share', {
-    has_custom_content: !!nextSettings.customContent.trim(),
-    user_log_id: STATE.userLogId
+  gaEvent('speech-rocket-game-settings-share-link-copied', {
+    'share-link-value': url
   });
 }
 
@@ -4107,12 +4117,12 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   STATE.pageOpenTimes[id] = Date.now();
-  gaEvent('page_view', { page: id });
 }
 
 function showResultPage() {
   const score = calcScore();
   const avg = avgAccuracy();
+  const isCustomSuccess = !!STATE.customVictory;
 
   // Check & update best score
   const isBest = score > STATE.bestScore;
@@ -4121,8 +4131,8 @@ function showResultPage() {
     localStorage.setItem('srBestScore', score);
   }
 
-  // Speak the failed word with TTS emphasis
-  if (window.speechSynthesis) {
+  // Speak the failed word only for crash results
+  if (!isCustomSuccess && window.speechSynthesis) {
     window.speechSynthesis.cancel();
     const intro = new SpeechSynthesisUtterance(`You were stopped by`);
     intro.lang = 'en-US'; intro.rate = 0.9;
@@ -4135,7 +4145,12 @@ function showResultPage() {
     window.speechSynthesis.speak(wordUtter);
   }
 
-  document.getElementById('resultWord').textContent = STATE.failedWord || '—';
+  const resultTitle = document.getElementById('resultTitle');
+  const resultSubtitle = document.getElementById('resultSubtitle');
+  const resultWord = document.getElementById('resultWord');
+  resultTitle.textContent = isCustomSuccess ? '🏆 Mission Complete!' : '💥 Crash!';
+  resultSubtitle.style.display = isCustomSuccess ? 'none' : '';
+  resultWord.textContent = isCustomSuccess ? 'You completed all custom words.' : (STATE.failedWord || '—');
   document.getElementById('resultScore').textContent = score.toLocaleString();
   document.getElementById('statWords').textContent = STATE.correctCount;
   document.getElementById('statAccuracy').textContent = avg + '%';
@@ -4227,7 +4242,10 @@ function showLeaderboardPage() {
     qrEl.textContent = CONFIG.GAME_URL;
   }
 
-  gaEvent('leaderboard_view', { score, place: rank, top_percent: topLabel });
+  gaEvent('speech-rocket-leaderboard', {
+    'correctly-pronounced-words-before-this': STATE.correctCount,
+    score
+  });
   showPage('page-leaderboard');
 }
 
@@ -4238,8 +4256,8 @@ function gaEvent(name, params) {
   try {
     if (typeof gtag === 'function') {
       gtag('event', name, {
-        ...params,
-        timestamp: new Date().toISOString()
+        time: getAnalyticsTime(),
+        ...(params || {})
       });
     }
     console.log('[SpeechRocket Analytics]', name, params);
@@ -4276,6 +4294,9 @@ function syncCustomDonationAmount(value, source = '') {
 
 function openCryptoDonationFromCustom() {
   document.getElementById('customCryptoModal').classList.add('show');
+  const amount = getCurrentDonationAmount();
+  gaEvent('speech-rocket-pay', { amount });
+  gaEvent('speech-rocket-pay-cripto', { amount });
 }
 
 function closeCustomCryptoModal() {
@@ -4294,6 +4315,49 @@ function normalizePaymentValue(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   return String(value);
+}
+
+function getAnalyticsTime() {
+  return new Date().toISOString();
+}
+
+function detectBrowserLabel() {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  if (ua.includes('edg')) return 'Edge';
+  if (ua.includes('opr') || ua.includes('opera')) return 'Opera';
+  if (ua.includes('samsungbrowser')) return 'Samsung Internet';
+  if (ua.includes('firefox') || ua.includes('fxios')) return 'Firefox';
+  if (ua.includes('crios')) return 'Chrome iOS';
+  if (ua.includes('chrome') || ua.includes('chromium')) return 'Chrome';
+  if (ua.includes('safari')) return 'Safari';
+  return 'Unknown';
+}
+
+function getCurrentDonationAmount() {
+  const customModal = document.getElementById('customContentModal');
+  const customModalAmount = parseFloat(document.getElementById('customContentDonationAmount')?.value);
+  if (customModal?.classList.contains('show') && Number.isFinite(customModalAmount) && customModalAmount > 0) {
+    return Math.round(customModalAmount * 100) / 100;
+  }
+  return getDonationAmount();
+}
+
+function getAppliedSettingsAnalyticsValue(settings) {
+  return JSON.stringify({
+    initial_speed_sec: settings.initialSpeedSec,
+    acceleration_sec: settings.accelerationSec,
+    custom_content: settings.customContent || ''
+  });
+}
+
+function openSupportPage() {
+  gaEvent('speech-rocket-help-us');
+  showPage('page-support');
+}
+
+function openInream() {
+  gaEvent('speech-rocket-to-inream');
+  window.open('https://inream.com', '_blank');
 }
 
 async function getAllpaySignature(params, apiKey) {
@@ -4333,7 +4397,7 @@ function isValidEmail(email) {
 }
 
 function getPaySubmitBtnLabel() {
-  const amount = STATE.paymentAmount || getDonationAmount();
+  const amount = STATE.paymentAmount || getCurrentDonationAmount();
   const tier = getSupporterAchievementForAmount(amount);
   if (STATE.paymentReady) {
     return tier
@@ -4480,7 +4544,7 @@ function getHostedFieldsInstance() {
 }
 
 async function prepareHostedFields() {
-  const amount = getDonationAmount();
+  const amount = getCurrentDonationAmount();
   const email = document.getElementById('payEmail').value.trim();
   const note = document.getElementById('donationMsg').value || 'Speech Rocket donation';
   const cardShell = document.getElementById('payCardShell');
@@ -4517,9 +4581,9 @@ async function prepareHostedFields() {
 }
 
 async function payByCard() {
-  const amount = getDonationAmount();
-
-  gaEvent('donate_card_click', { amount, currency: CONFIG.ALLPAY_CURRENCY });
+  const amount = getCurrentDonationAmount();
+  gaEvent('speech-rocket-pay', { amount });
+  gaEvent('speech-rocket-pay-card', { amount });
 
   const modal = document.getElementById('payModal');
   const storedEmail = localStorage.getItem('srDonationEmail') || '';
@@ -4580,7 +4644,9 @@ function toggleCrypto() {
   const crypto = document.getElementById('cryptoScreen');
   main.style.display = 'none';
   crypto.classList.add('show');
-  gaEvent('crypto_toggle');
+  const amount = getCurrentDonationAmount();
+  gaEvent('speech-rocket-pay', { amount });
+  gaEvent('speech-rocket-pay-cripto', { amount });
 }
 
 function closeCrypto() {
@@ -4594,13 +4660,15 @@ function copyAddr(coin) {
   const addr = CONFIG.CRYPTO_ADDRS[coin];
   copyToClipboard(addr);
   showToast('Address is copied. Thanks for the crypto donation you are going to make 🎉', 4200);
-  gaEvent('crypto_copy', { coin });
 }
 
 function copyLink() {
-  copyToClipboard(getShareableSettingsUrl());
+  const shareLink = getShareableSettingsUrl();
+  copyToClipboard(shareLink);
   showToast('✓ Link copied!');
-  gaEvent('share_link_copy');
+  gaEvent('speech-rocket-game-help-us-link-copied', {
+    'share-link-value': shareLink
+  });
 }
 
 function copyToClipboard(text) {
@@ -5006,6 +5074,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Button bindings
   document.getElementById('startBtn').addEventListener('click', () => {
     getAudioCtx(); // unlock AudioContext on user gesture
+    gaEvent('speech-rocket-start-pressed', {
+      browser: detectBrowserLabel(),
+      'redirection-required': shouldSuggestSupportedBrowser()
+    });
     requestMicAndStart();
   });
 
@@ -5014,15 +5086,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('resultHelpBtn').addEventListener('click', () => {
-    gaEvent('support_page_open', { from: 'result' });
-    showPage('page-support');
+    openSupportPage('result');
   });
+  document.getElementById('resultBoostBtn').addEventListener('click', openInream);
   document.getElementById('resultTutorShareBtn').addEventListener('click', openTutorShareFlow);
 
   document.getElementById('leaderboardHelpBtn').addEventListener('click', () => {
-    gaEvent('support_page_open', { from: 'leaderboard' });
-    showPage('page-support');
+    openSupportPage('leaderboard');
   });
+  document.getElementById('leaderboardBoostBtn').addEventListener('click', openInream);
   document.getElementById('leaderboardTutorShareBtn').addEventListener('click', openTutorShareFlow);
 
   document.getElementById('newFlightBtn').addEventListener('click', () => {
@@ -5086,12 +5158,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.getElementById('victoryReplayBtn').addEventListener('click', () => {
-    restartGameWithCurrentSettings();
-  });
-  document.getElementById('victoryCloseBtn').addEventListener('click', () => {
+  document.getElementById('victoryResultsBtn').addEventListener('click', () => {
     hideVictoryOverlay();
-    showPage('page-start');
+    showResultPage();
   });
 
   // Auto-stretch textarea for feature request
@@ -5106,7 +5175,9 @@ document.addEventListener('DOMContentLoaded', () => {
   bindPaymentIframeLoad();
   // Track time on start page
   STATE.pageOpenTimes['page-start'] = Date.now();
-  gaEvent('page_view', { page: 'start' });
+  gaEvent('speech-rocket-open', {
+    user_log_id: STATE.userLogId
+  });
   syncShareUi();
 
   // Handle page visibility (pause/resume recognition)
