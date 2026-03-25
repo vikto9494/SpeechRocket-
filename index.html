@@ -248,6 +248,15 @@ html, body {
   margin-top: 10px;
 }
 .btn-boost:active { transform: scale(0.97); }
+.action-card-btn {
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+}
 .btn-label-small {
   display: block;
   font-size: 11px;
@@ -583,6 +592,38 @@ html, body {
 }
 .recognition-debug-line + .recognition-debug-line {
   margin-top: 8px;
+}
+.recognition-debug-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.recognition-debug-btn {
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.82);
+  border-radius: 9px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.recognition-debug-log {
+  margin-top: 10px;
+  max-height: 128px;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(6, 12, 35, 0.42);
+  padding: 10px;
+  color: rgba(255,255,255,0.86);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 .recognition-debug-label {
   color: rgba(255,255,255,0.62);
@@ -1777,6 +1818,11 @@ textarea.donation-msg {
       <div class="recognition-debug-label">Accuracy Check</div>
       <div class="recognition-debug-value" id="recognitionDebugAccuracy">Target: — | Spoken: — | Accuracy: — | Threshold: —</div>
     </div>
+    <div class="recognition-debug-actions">
+      <button class="recognition-debug-btn" id="copyRecognitionDebugLogBtn" type="button">Copy log</button>
+      <button class="recognition-debug-btn" id="clearRecognitionDebugLogBtn" type="button">Clear log</button>
+    </div>
+    <div class="recognition-debug-log" id="recognitionDebugLog">No accuracy checks yet.</div>
   </div>
 
   <!-- Listening HUD -->
@@ -1878,13 +1924,17 @@ textarea.donation-msg {
     </div>
     <div class="result-buttons">
       <button class="btn-primary" id="resultContinueBtn">Continue 🏆</button>
-      <button class="btn-secondary" id="resultHelpBtn">
-        Help us & feature request
+      <button class="btn-secondary action-card-btn" id="resultHelpBtn">
+        Help us & request feature
         <span class="btn-label-small">Unlock supporter achievement</span>
       </button>
-      <button class="btn-boost" onclick="window.open('https://inream.com','_blank')">
+      <button class="btn-boost action-card-btn" onclick="window.open('https://inream.com','_blank')">
         Boost your language with our AI assistant
         <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
+      </button>
+      <button class="btn-boost action-card-btn" id="resultTutorShareBtn">
+        For tutors: share custom game with your learners
+        <span class="btn-label-small">Build a lesson-specific challenge and send one share link</span>
       </button>
     </div>
   </div>
@@ -1908,13 +1958,17 @@ textarea.donation-msg {
     </div>
     <div class="lb-next-badge" id="lbNextBadge"></div>
     <button class="btn-primary" id="newFlightBtn">Start new flight 🚀</button>
-    <button class="btn-secondary" id="leaderboardHelpBtn">
-      Help us & feature request
+    <button class="btn-secondary action-card-btn" id="leaderboardHelpBtn">
+      Help us & request feature
       <span class="btn-label-small">Unlock supporter achievement</span>
     </button>
-    <button class="btn-boost" id="leaderboardBoostBtn" onclick="window.open('https://inream.com','_blank')">
+    <button class="btn-boost action-card-btn" id="leaderboardBoostBtn" onclick="window.open('https://inream.com','_blank')">
       Boost your language with our AI assistant
       <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
+    </button>
+    <button class="btn-boost action-card-btn" id="leaderboardTutorShareBtn">
+      For tutors: share custom game with your learners
+      <span class="btn-label-small">Build a lesson-specific challenge and send one share link</span>
     </button>
   </div>
 </div>
@@ -2739,6 +2793,7 @@ let recognition = null;
 let permissionGranted = false;
 let recActive = false;
 let suppressRecognitionRestart = false;
+let recognitionDebugEntries = [];
 
 function syncRecognitionDebugMode() {
   const panel = document.getElementById('recognitionDebugPanel');
@@ -2764,10 +2819,39 @@ function updateRecognitionDebugAccuracy(message) {
   accuracyEl.textContent = message || 'Target: — | Spoken: — | Accuracy: — | Threshold: —';
 }
 
+function renderRecognitionDebugLog() {
+  const logEl = document.getElementById('recognitionDebugLog');
+  if (!logEl) return;
+  logEl.textContent = recognitionDebugEntries.length
+    ? recognitionDebugEntries.join('\n')
+    : 'No accuracy checks yet.';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function appendRecognitionDebugLog(message) {
+  const stamp = new Date().toLocaleTimeString();
+  recognitionDebugEntries.push(`[${stamp}] ${message}`);
+  if (recognitionDebugEntries.length > 120) {
+    recognitionDebugEntries = recognitionDebugEntries.slice(-120);
+  }
+  renderRecognitionDebugLog();
+}
+
+function clearRecognitionDebugLog() {
+  recognitionDebugEntries = [];
+  renderRecognitionDebugLog();
+}
+
+function copyRecognitionDebugLog() {
+  copyToClipboard(recognitionDebugEntries.join('\n') || 'No accuracy checks yet.');
+  showToast('Accuracy log copied');
+}
+
 function resetRecognitionDebug() {
   updateRecognitionDebugStatus('Waiting for recording to start');
   updateRecognitionDebugTranscript('');
   updateRecognitionDebugAccuracy('');
+  clearRecognitionDebugLog();
 }
 
 function initRecognition() {
@@ -2840,13 +2924,16 @@ function initRecognition() {
     const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
       ? CONFIG.ACCURACY_THRESHOLD_EARLY
       : CONFIG.ACCURACY_THRESHOLD_NORMAL;
-    updateRecognitionDebugAccuracy(
-      `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount}) | Threshold: ${threshold}% | ${accuracy >= threshold ? 'PASS' : 'MISS'}`
-    );
+    const passesThreshold = debugInfo.targetCount > 1
+      ? debugInfo.perWordScores.every((score) => score > threshold)
+      : accuracy >= threshold;
+    const accuracyMessage = `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount} strong) | Threshold: ${threshold}% | ${passesThreshold ? 'PASS' : 'MISS'} | ${debugInfo.scoredMatches.join(', ')}`;
+    updateRecognitionDebugAccuracy(accuracyMessage);
+    appendRecognitionDebugLog(`${isFinal ? 'FINAL' : 'INTERIM'} | ${accuracyMessage}`);
 
     console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
 
-    if (accuracy >= threshold) {
+    if (passesThreshold) {
       wordCorrect(accuracy);
     }
   };
@@ -2892,6 +2979,32 @@ function normalizeRecognitionText(text) {
     .trim();
 }
 
+function scoreWordSimilarity(spokenWord, targetWord) {
+  if (!spokenWord || !targetWord) return 0;
+  if (spokenWord === targetWord) return 100;
+
+  const distance = levenshtein(spokenWord, targetWord);
+  const base = Math.max(0, (1 - distance / Math.max(spokenWord.length, targetWord.length)) * 100);
+
+  // Reward strong prefix overlap for speech-recognition expansions like "the" -> "there".
+  let prefixLen = 0;
+  const prefixMax = Math.min(spokenWord.length, targetWord.length);
+  while (prefixLen < prefixMax && spokenWord[prefixLen] === targetWord[prefixLen]) {
+    prefixLen++;
+  }
+  const prefixRatio = prefixLen / Math.max(targetWord.length, spokenWord.length);
+  const prefixBoost = prefixLen >= 2 ? prefixRatio * 22 : 0;
+
+  // Small boost when one word fully contains the other and lengths stay reasonably close.
+  const containmentBoost =
+    (spokenWord.includes(targetWord) || targetWord.includes(spokenWord)) &&
+    Math.abs(spokenWord.length - targetWord.length) <= 3
+      ? 10
+      : 0;
+
+  return Math.min(100, base + prefixBoost + containmentBoost);
+}
+
 function getAccuracyDebugInfo(transcript, target) {
   const transcriptNorm = normalizeRecognitionText(transcript);
   const targetNorm = normalizeRecognitionText(target);
@@ -2904,27 +3017,40 @@ function getAccuracyDebugInfo(transcript, target) {
       transcriptNorm,
       targetNorm,
       matchCount: 0,
-      targetCount: 0
+      targetCount: 0,
+      scoredMatches: [],
+      perWordScores: []
     };
   }
 
-  let matchCount = 0;
+  let totalScore = 0;
+  let strongMatchCount = 0;
+  const scoredMatches = [];
+  const perWordScores = [];
   for (const tw of targetWords) {
-    if (spokenWords.some(sw => {
-      if (sw === tw) return true;
-      const maxDist = tw.length <= 4 ? 1 : 2;
-      return levenshtein(sw, tw) <= maxDist;
-    })) {
-      matchCount++;
+    let bestWord = '';
+    let bestScore = 0;
+    for (const sw of spokenWords) {
+      const score = scoreWordSimilarity(sw, tw);
+      if (score > bestScore) {
+        bestScore = score;
+        bestWord = sw;
+      }
     }
+    totalScore += bestScore;
+    if (bestScore >= 70) strongMatchCount++;
+    scoredMatches.push(`${tw}<-${bestWord || '—'}:${bestScore.toFixed(0)}%`);
+    perWordScores.push(bestScore);
   }
 
   return {
-    accuracy: (matchCount / targetWords.length) * 100,
+    accuracy: totalScore / targetWords.length,
     transcriptNorm,
     targetNorm,
-    matchCount,
-    targetCount: targetWords.length
+    matchCount: strongMatchCount,
+    targetCount: targetWords.length,
+    scoredMatches,
+    perWordScores
   };
 }
 
@@ -3052,10 +3178,12 @@ function nextWord() {
   STATE.wordActive = true;
   STATE.wordCorrect = false;
   STATE.listeningEnabled = false; // will be unlocked by speakWord after TTS ends
+  const normalizedTarget = normalizeRecognitionText(word);
+  const targetWordCount = normalizedTarget ? normalizedTarget.split(/\s+/).filter(Boolean).length : 0;
   const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
     ? CONFIG.ACCURACY_THRESHOLD_EARLY
     : CONFIG.ACCURACY_THRESHOLD_NORMAL;
-  updateRecognitionDebugAccuracy(`Target: ${normalizeRecognitionText(word) || '—'} | Spoken: — | Accuracy: 0.0% (0/${normalizeRecognitionText(word).split(/\s+/).filter(Boolean).length || 0}) | Threshold: ${threshold}% | waiting`);
+  updateRecognitionDebugAccuracy(`Target: ${normalizedTarget || '—'} | Spoken: — | Accuracy: 0.0% (0/${targetWordCount} strong) | Threshold: ${threshold}% | waiting`);
 
   // Show listening HUD
   document.getElementById('listenHud').style.display = 'flex';
@@ -3422,6 +3550,11 @@ function openSettingsMenu() {
     STATE.settingsWasPlaying = false;
   }
   modal.classList.add('show');
+}
+
+function openTutorShareFlow() {
+  openSettingsMenu();
+  gaEvent('tutor_share_flow_open');
 }
 
 function closeSettingsMenu({ resumeGame = true } = {}) {
@@ -4651,11 +4784,13 @@ document.addEventListener('DOMContentLoaded', () => {
     gaEvent('support_page_open', { from: 'result' });
     showPage('page-support');
   });
+  document.getElementById('resultTutorShareBtn').addEventListener('click', openTutorShareFlow);
 
   document.getElementById('leaderboardHelpBtn').addEventListener('click', () => {
     gaEvent('support_page_open', { from: 'leaderboard' });
     showPage('page-support');
   });
+  document.getElementById('leaderboardTutorShareBtn').addEventListener('click', openTutorShareFlow);
 
   document.getElementById('newFlightBtn').addEventListener('click', () => {
     getAudioCtx();
@@ -4669,6 +4804,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('backFromSupportBtn').addEventListener('click', () => {
     showPage('page-result');
   });
+  document.getElementById('copyRecognitionDebugLogBtn').addEventListener('click', copyRecognitionDebugLog);
+  document.getElementById('clearRecognitionDebugLogBtn').addEventListener('click', clearRecognitionDebugLog);
 
   document.getElementById('settingsCloseX').addEventListener('click', () => closeSettingsMenu());
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeSettingsMenu());
