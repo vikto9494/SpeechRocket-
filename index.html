@@ -359,7 +359,7 @@ html, body {
   font-size: clamp(18px, 5vw, 24px);
   font-weight: 800;
   color: #fff;
-  white-space: nowrap;
+  white-space: normal;
   text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(255,160,60,0.4);
   padding: 0;
   background: none;
@@ -385,8 +385,10 @@ html, body {
   z-index: 1;
   padding: 18px 32px;
   font-size: clamp(22px, 6vw, 30px);
-  text-overflow: ellipsis;
-  overflow: hidden;
+  overflow: visible;
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.3;
 }
 
 /* ── Falling state: gravity ease-in ── */
@@ -535,6 +537,52 @@ html, body {
   .listen-label {
     font-size: 12px;
   }
+}
+
+.recognition-debug {
+  position: absolute;
+  top: 72px;
+  left: 12px;
+  right: 12px;
+  z-index: 24;
+  display: none;
+  background: rgba(13,27,75,0.78);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 28px rgba(13,27,75,0.24);
+}
+.recognition-debug.show {
+  display: block;
+}
+.recognition-debug-title {
+  color: rgba(255,255,255,0.56);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.recognition-debug-line + .recognition-debug-line {
+  margin-top: 8px;
+}
+.recognition-debug-label {
+  color: rgba(255,255,255,0.62);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.recognition-debug-value {
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 3px;
+  word-break: break-word;
 }
 
 /* Rocket area */
@@ -1345,6 +1393,18 @@ textarea.donation-msg {
     <div class="accuracy-badge" id="accuracyBadge"></div>
   </div>
 
+  <div class="recognition-debug" id="recognitionDebugPanel">
+    <div class="recognition-debug-title">Recognition debug mode</div>
+    <div class="recognition-debug-line">
+      <div class="recognition-debug-label">Status</div>
+      <div class="recognition-debug-value" id="recognitionDebugStatus">Waiting for recording to start</div>
+    </div>
+    <div class="recognition-debug-line">
+      <div class="recognition-debug-label">Analyzed text</div>
+      <div class="recognition-debug-value" id="recognitionDebugTranscript">No recorded text yet</div>
+    </div>
+  </div>
+
   <!-- Listening HUD -->
   <div class="listen-hud" id="listenHud" style="display:none">
     <div class="listen-waves">
@@ -1593,6 +1653,10 @@ textarea.donation-msg {
    All game parameters are here for easy tuning.
 ═════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
+  recognition_debug_mode: ['1', 'true', 'yes'].includes(
+    new URLSearchParams(window.location.search).get('recognition_debug_mode')
+  ),
+
   // Accuracy thresholds (0–100)
   ACCURACY_THRESHOLD_EARLY: 50,    // threshold for first N words
   ACCURACY_THRESHOLD_NORMAL: 65,   // threshold after first N words
@@ -1854,6 +1918,30 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 let recognition = null;
 let permissionGranted = false;
 let recActive = false;
+let suppressRecognitionRestart = false;
+
+function syncRecognitionDebugMode() {
+  const panel = document.getElementById('recognitionDebugPanel');
+  if (!panel) return;
+  panel.classList.toggle('show', !!CONFIG.recognition_debug_mode);
+}
+
+function updateRecognitionDebugStatus(message) {
+  const statusEl = document.getElementById('recognitionDebugStatus');
+  if (!statusEl) return;
+  statusEl.textContent = message;
+}
+
+function updateRecognitionDebugTranscript(text) {
+  const transcriptEl = document.getElementById('recognitionDebugTranscript');
+  if (!transcriptEl) return;
+  transcriptEl.textContent = text || 'No recorded text yet';
+}
+
+function resetRecognitionDebug() {
+  updateRecognitionDebugStatus('Waiting for recording to start');
+  updateRecognitionDebugTranscript('');
+}
 
 function initRecognition() {
   if (!SpeechRecognition) {
@@ -1870,14 +1958,16 @@ function initRecognition() {
 
   recognition.onstart = () => {
     recActive = true;
+    updateRecognitionDebugStatus('System started recording');
     console.log('[SpeechRocket] 🎤 Recognition started');
   };
 
   recognition.onend = () => {
     recActive = false;
+    updateRecognitionDebugStatus('System stopped recording');
     console.log('[SpeechRocket] ⏸ Recognition ended');
     // Auto-restart if game is active
-    if (STATE.isPlaying && permissionGranted) {
+    if (STATE.isPlaying && permissionGranted && !suppressRecognitionRestart) {
       setTimeout(() => {
         try { recognition.start(); } catch(e) { console.log('[SpeechRocket] restart err:', e); }
       }, 200);
@@ -1915,6 +2005,7 @@ function initRecognition() {
     }
 
     if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
+    updateRecognitionDebugTranscript(allText.trim());
 
     // Check accuracy against current target
     const accuracy = calcAccuracy(allText, STATE.currentTarget);
@@ -1969,6 +2060,7 @@ function levenshtein(a, b) {
 }
 
 function startRecognition() {
+  suppressRecognitionRestart = false;
   if (!recognition) return;
   if (!recActive) {
     try { recognition.start(); }
@@ -2039,6 +2131,8 @@ function startGame() {
   document.getElementById('rocketWrapper').classList.remove('rocket-crash');
   STATE.sessionStart = Date.now();
   STATE.attempts++;
+  resetRecognitionDebug();
+  syncRecognitionDebugMode();
 
   playRocketSound();
   showPage('page-gameplay');
@@ -2204,6 +2298,7 @@ function wordMissed() {
 
   document.getElementById('listenHud').style.display = 'none';
   document.getElementById('pauseBtn').innerHTML = '&#9208;';
+  updateRecognitionDebugStatus('System stopped recording');
   stopRecognition();
 
   gaEvent('result', {
@@ -2246,6 +2341,7 @@ function cancelCurrentWord() {
     s.style.animationPlayState = '';
   });
   document.getElementById('listenHud').style.display = 'none';
+  updateRecognitionDebugTranscript('');
 }
 
 function skipToFullPhrases() {
@@ -2277,6 +2373,7 @@ function restartGame() {
   cancelCurrentWord();
   STATE.isPlaying = false;
   STATE.paused = false;
+  updateRecognitionDebugStatus('System stopped recording');
   stopRecognition();
 
   document.getElementById('rocketWrapper').classList.remove('rocket-crash');
@@ -2314,6 +2411,7 @@ function togglePause() {
 
     document.getElementById('pauseBtn').innerHTML = '&#9654;';
     document.getElementById('listenLabel').textContent = 'paused';
+    updateRecognitionDebugStatus('Recording paused');
   } else {
     // Resume
     STATE.paused = false;
@@ -2333,7 +2431,14 @@ function togglePause() {
       if (!bubble.classList.contains('falling')) {
         bubble.classList.add('falling');
       }
-      STATE.listeningEnabled = true;
+      const waitingForPrompt = ttsSpeaking;
+      if (waitingForPrompt) {
+        STATE.listeningEnabled = false;
+        document.getElementById('listenLabel').textContent = 'wait for prompt...';
+      } else {
+        startRecognition();
+        STATE.listeningEnabled = true;
+      }
       // Use remaining time, not full duration
       const remaining = Math.max(100, STATE.fallTimeRemaining);
       STATE.fallStartedAt = Date.now();
@@ -2344,7 +2449,10 @@ function togglePause() {
           wordMissed();
         }
       }, remaining);
-      document.getElementById('listenLabel').textContent = 'listening...';
+      if (!waitingForPrompt) {
+        document.getElementById('listenLabel').textContent = 'listening...';
+        updateRecognitionDebugStatus('System started recording');
+      }
     } else if (!STATE.wordActive) {
       // Paused between words — launch the next word
       nextWord();
@@ -2466,9 +2574,21 @@ function playSuccessSound() {
 
 let ttsSpeaking = false;
 let ttsResumeTimer = null;
+
+function reopenRecognitionForPlayer(gen, source) {
+  if (STATE.wordGeneration !== gen) return;
+  if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect || STATE.paused) return;
+  suppressRecognitionRestart = false;
+  startRecognition();
+  STATE.listeningEnabled = true;
+  console.log(`[SpeechRocket] 🎤 Mic now open for player (${source})`);
+}
+
 function speakWord(text) {
   if (!window.speechSynthesis) {
     // No TTS — open listening immediately
+    suppressRecognitionRestart = false;
+    startRecognition();
     STATE.listeningEnabled = true;
     return;
   }
@@ -2476,6 +2596,8 @@ function speakWord(text) {
     // Mute recognition for the duration of TTS + buffer
     STATE.listeningEnabled = false;
     clearTimeout(ttsResumeTimer);
+    suppressRecognitionRestart = true;
+    stopRecognition();
     window.speechSynthesis.cancel();
 
     const utter = new SpeechSynthesisUtterance(text);
@@ -2505,18 +2627,14 @@ function speakWord(text) {
       console.log('[SpeechRocket] 🔊 TTS ended — waiting 350ms before enabling mic');
       // Wait 350ms after TTS ends before accepting any recognition results
       ttsResumeTimer = setTimeout(() => {
-        if (STATE.wordGeneration !== gen) return;
-        if (STATE.isPlaying && STATE.wordActive && !STATE.wordCorrect && !STATE.paused) {
-          STATE.listeningEnabled = true;
-          console.log('[SpeechRocket] 🎤 Mic now open for player');
-        }
+        reopenRecognitionForPlayer(gen, 'after TTS');
       }, 350);
     };
 
     utter.onerror = () => {
       ttsSpeaking = false;
       if (STATE.wordGeneration !== gen) return;
-      if (!STATE.paused) STATE.listeningEnabled = true;
+      if (!STATE.paused) reopenRecognitionForPlayer(gen, 'after TTS error');
     };
 
     window.speechSynthesis.speak(utter);
@@ -2524,14 +2642,14 @@ function speakWord(text) {
     // Fallback: if onend never fires (iOS bug), open mic after estimated TTS duration
     const estDuration = Math.max(1500, text.split(' ').length * 600);
     ttsResumeTimer = setTimeout(() => {
-      if (STATE.wordGeneration !== gen) return;
-      if (!STATE.listeningEnabled && STATE.isPlaying && !STATE.paused) {
-        STATE.listeningEnabled = true;
-        console.log('[SpeechRocket] 🎤 Mic opened via fallback timer');
+      if (!STATE.listeningEnabled) {
+        reopenRecognitionForPlayer(gen, 'fallback timer');
       }
     }, estDuration + 400);
 
   } catch(e) {
+    suppressRecognitionRestart = false;
+    startRecognition();
     STATE.listeningEnabled = true;
   }
 }
@@ -3333,6 +3451,9 @@ function showEmbeddedWarning() {
    SECTION 13: INITIALIZATION
 ═════════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+  syncRecognitionDebugMode();
+  resetRecognitionDebug();
+
   // Load best score
   STATE.bestScore = parseInt(localStorage.getItem('srBestScore')) || 0;
 
