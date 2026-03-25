@@ -1295,6 +1295,13 @@ textarea.donation-msg {
 @keyframes pulse-mic { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
 .mic-overlay h2 { font-family: var(--font-display); color: #fff; font-size: 20px; }
 .mic-overlay p { color: rgba(255,255,255,0.6); font-size: 14px; }
+.mic-overlay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
 
 /* ═══════════════════════════════════════════════════════
    EMBEDDED BROWSER WARNING
@@ -1685,8 +1692,12 @@ textarea.donation-msg {
 <!-- ═══════════════════════ MIC OVERLAY ═══════════════════════ -->
 <div class="mic-overlay" id="micOverlay">
   <div class="mic-icon-big">🎤</div>
-  <h2>Microphone Access</h2>
-  <p>Please allow microphone access to play Speech Rocket. This is needed only once.</p>
+  <h2 id="micOverlayTitle">Microphone Access</h2>
+  <p id="micOverlayText">Please allow microphone access to play Speech Rocket. This is needed only once.</p>
+  <div class="mic-overlay-actions">
+    <button class="btn-primary" id="micOverlayPrimaryBtn" type="button">Allow microphone</button>
+    <button class="btn-secondary" id="micOverlaySecondaryBtn" type="button" style="display:none">Close</button>
+  </div>
 </div>
 
 <!-- ═══════════════════════ EMBEDDED BROWSER WARNING ═══════════════════════ -->
@@ -2107,9 +2118,9 @@ textarea.donation-msg {
     <div class="settings-group">
       <div class="settings-label">Initial Speed</div>
       <div class="settings-segmented" id="settingsInitialSpeedChips">
-        <button class="settings-chip" type="button" data-value="6.0">Fast</button>
-        <button class="settings-chip" type="button" data-value="8.5">Normal</button>
-        <button class="settings-chip" type="button" data-value="11.0">Easy</button>
+        <button class="settings-chip" type="button" data-value="7.0">Fast</button>
+        <button class="settings-chip" type="button" data-value="11.0">Normal</button>
+        <button class="settings-chip" type="button" data-value="15.0">Easy</button>
       </div>
       <input class="settings-number" id="settingsInitialSpeed" type="hidden">
       <div class="settings-help">Time in seconds for a new target to fall before it reaches the rocket.</div>
@@ -2120,7 +2131,7 @@ textarea.donation-msg {
       <div class="settings-segmented" id="settingsAccelerationChips">
         <button class="settings-chip" type="button" data-value="0.5">Soft</button>
         <button class="settings-chip" type="button" data-value="1.5">Normal</button>
-        <button class="settings-chip" type="button" data-value="2.0">Strong</button>
+        <button class="settings-chip" type="button" data-value="3.0">Strong</button>
       </div>
       <input class="settings-number" id="settingsAcceleration" type="hidden">
       <div class="settings-help">How many seconds faster the game becomes after each correct answer.</div>
@@ -2239,7 +2250,7 @@ const SETTINGS_STORAGE_KEY = 'srGameSettingsV1';
 const USER_LOG_ID_STORAGE_KEY = 'srUserLogId';
 const SUPPORTER_STORAGE_KEY = 'srSupporterAchievement';
 const DEFAULT_GAME_SETTINGS = Object.freeze({
-  initialSpeedSec: 8.5,
+  initialSpeedSec: 11.0,
   accelerationSec: 1.5,
   customContent: ''
 });
@@ -2794,6 +2805,7 @@ let permissionGranted = false;
 let recActive = false;
 let suppressRecognitionRestart = false;
 let recognitionDebugEntries = [];
+let micRecoveryMode = false;
 
 function syncRecognitionDebugMode() {
   const panel = document.getElementById('recognitionDebugPanel');
@@ -2865,7 +2877,7 @@ function initRecognition() {
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
-  recognition.maxAlternatives = 3;
+  recognition.maxAlternatives = 1;
 
   recognition.onstart = () => {
     recActive = true;
@@ -2889,52 +2901,51 @@ function initRecognition() {
     console.error('[SpeechRocket] ❌ Recognition error:', e.error);
     recActive = false;
     if (e.error === 'not-allowed' || e.error === 'denied') {
-      showToast('Microphone access denied. Please allow and restart.');
+      if (STATE.isPlaying) {
+        handleLostMicrophoneAccess();
+      } else {
+        showToast('Microphone access denied. Please allow and restart.');
+      }
     }
   };
 
   recognition.onresult = (e) => {
-    // Collect all alternatives from the latest result
-    const result = e.results[e.resultIndex];
-    const transcripts = [];
-    for (let i = 0; i < result.length; i++) {
-      transcripts.push({
-        text: result[i].transcript,
-        confidence: result[i].confidence || 0
-      });
-    }
-    const allText = transcripts.map(t => t.text).join(' ');
-    const topConf = transcripts[0]?.confidence || 0;
-    const isFinal = result.isFinal;
+    for (let idx = e.resultIndex; idx < e.results.length; idx++) {
+      const result = e.results[idx];
+      const topText = result[0]?.transcript || '';
+      const topConf = result[0]?.confidence || 0;
+      const isFinal = result.isFinal;
 
-    console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${allText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
+      console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${topText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
 
-    // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
-    if (!STATE.listeningEnabled) {
-      console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
-      return;
-    }
+      // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
+      if (!STATE.listeningEnabled) {
+        console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
+        continue;
+      }
 
-    if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
-    updateRecognitionDebugTranscript(allText.trim());
+      if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
+      updateRecognitionDebugTranscript(topText.trim());
 
-    // Check accuracy against current target
-    const debugInfo = getAccuracyDebugInfo(allText, STATE.currentTarget);
-    const accuracy = debugInfo.accuracy;
-    const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
-      ? CONFIG.ACCURACY_THRESHOLD_EARLY
-      : CONFIG.ACCURACY_THRESHOLD_NORMAL;
-    const passesThreshold = debugInfo.targetCount > 1
-      ? debugInfo.perWordScores.every((score) => score > threshold)
-      : accuracy >= threshold;
-    const accuracyMessage = `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount} strong) | Threshold: ${threshold}% | ${passesThreshold ? 'PASS' : 'MISS'} | ${debugInfo.scoredMatches.join(', ')}`;
-    updateRecognitionDebugAccuracy(accuracyMessage);
-    appendRecognitionDebugLog(`${isFinal ? 'FINAL' : 'INTERIM'} | ${accuracyMessage}`);
+      // Check accuracy against the top alternative immediately for lower latency.
+      const debugInfo = getAccuracyDebugInfo(topText, STATE.currentTarget);
+      const accuracy = debugInfo.accuracy;
+      const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
+        ? CONFIG.ACCURACY_THRESHOLD_EARLY
+        : CONFIG.ACCURACY_THRESHOLD_NORMAL;
+      const passesThreshold = debugInfo.targetCount > 1
+        ? debugInfo.perWordScores.every((score) => score > threshold)
+        : accuracy >= threshold;
+      const accuracyMessage = `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount} strong) | Threshold: ${threshold}% | ${passesThreshold ? 'PASS' : 'MISS'} | ${debugInfo.scoredMatches.join(', ')}`;
+      updateRecognitionDebugAccuracy(accuracyMessage);
+      appendRecognitionDebugLog(`${isFinal ? 'FINAL' : 'INTERIM'} | ${accuracyMessage}`);
 
-    console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+      console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
 
-    if (passesThreshold) {
-      wordCorrect(accuracy);
+      if (passesThreshold) {
+        wordCorrect(accuracy);
+        return;
+      }
     }
   };
 
@@ -3086,6 +3097,75 @@ function stopRecognition() {
   }
 }
 
+function showMicOverlay({ title, text, primaryLabel = 'Allow microphone', secondaryLabel = '', showSecondary = false, onPrimary = null, onSecondary = null }) {
+  const overlay = document.getElementById('micOverlay');
+  const titleEl = document.getElementById('micOverlayTitle');
+  const textEl = document.getElementById('micOverlayText');
+  const primaryBtn = document.getElementById('micOverlayPrimaryBtn');
+  const secondaryBtn = document.getElementById('micOverlaySecondaryBtn');
+
+  titleEl.textContent = title;
+  textEl.textContent = text;
+  primaryBtn.textContent = primaryLabel;
+  secondaryBtn.textContent = secondaryLabel || 'Close';
+  secondaryBtn.style.display = showSecondary ? '' : 'none';
+  primaryBtn.onclick = onPrimary;
+  secondaryBtn.onclick = onSecondary;
+  overlay.classList.add('show');
+}
+
+function hideMicOverlay() {
+  document.getElementById('micOverlay').classList.remove('show');
+}
+
+function restoreMicDuringGame() {
+  hideMicOverlay();
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      stream.getTracks().forEach(t => t.stop());
+      permissionGranted = true;
+      micRecoveryMode = false;
+      if (STATE.isPlaying && STATE.paused) {
+        startRecognition();
+        togglePause();
+      } else if (STATE.isPlaying) {
+        startRecognition();
+      }
+      showToast('Microphone restored');
+    })
+    .catch(err => {
+      console.error('[SpeechRocket] Mic recovery error:', err);
+      showMicOverlay({
+        title: 'Microphone paused',
+        text: 'Speech Rocket lost microphone access while the game was running. Please allow it again to continue.',
+        primaryLabel: 'Retry microphone',
+        secondaryLabel: 'Close',
+        showSecondary: true,
+        onPrimary: restoreMicDuringGame,
+        onSecondary: hideMicOverlay
+      });
+    });
+}
+
+function handleLostMicrophoneAccess() {
+  permissionGranted = false;
+  micRecoveryMode = true;
+  if (STATE.isPlaying && !STATE.paused) {
+    togglePause();
+  }
+  stopRecognition();
+  updateRecognitionDebugStatus('Microphone access lost');
+  showMicOverlay({
+    title: 'Microphone paused',
+    text: 'Speech Rocket lost microphone access while the game was running. Please allow it again to continue.',
+    primaryLabel: 'Retry microphone',
+    secondaryLabel: 'Close',
+    showSecondary: true,
+    onPrimary: restoreMicDuringGame,
+    onSecondary: hideMicOverlay
+  });
+}
+
 /* ═════════════════════════════════════════════════════════════════════
    SECTION 6: GAME LOGIC
 ═════════════════════════════════════════════════════════════════════ */
@@ -3098,25 +3178,31 @@ function requestMicAndStart() {
     startGame();
     return;
   }
-  document.getElementById('micOverlay').classList.add('show');
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      // Stop the stream immediately — we just needed permission
-      stream.getTracks().forEach(t => t.stop());
-      permissionGranted = true;
-      document.getElementById('micOverlay').classList.remove('show');
-      initRecognition();
-      startGame();
-    })
-    .catch(err => {
-      document.getElementById('micOverlay').classList.remove('show');
-      console.error('[SpeechRocket] Mic permission error:', err);
-      if (shouldSuggestSupportedBrowser()) {
-        showEmbeddedWarning();
-      } else {
-        showToast('Microphone access denied. Please allow and try again.');
-      }
-    });
+  showMicOverlay({
+    title: 'Microphone Access',
+    text: 'Please allow microphone access to play Speech Rocket. This is needed only once.',
+    primaryLabel: 'Allow microphone',
+    onPrimary: () => {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          // Stop the stream immediately — we just needed permission
+          stream.getTracks().forEach(t => t.stop());
+          permissionGranted = true;
+          hideMicOverlay();
+          initRecognition();
+          startGame();
+        })
+        .catch(err => {
+          hideMicOverlay();
+          console.error('[SpeechRocket] Mic permission error:', err);
+          if (shouldSuggestSupportedBrowser()) {
+            showEmbeddedWarning();
+          } else {
+            showToast('Microphone access denied. Please allow and try again.');
+          }
+        });
+    }
+  });
 }
 
 function startGame() {
@@ -3150,6 +3236,7 @@ function startGame() {
 
   playRocketSound();
   showPage('page-gameplay');
+  requestWakeLock();
   updateMeterDisplay();
   startCloudAnimation();
 
@@ -3301,6 +3388,7 @@ function wordMissed() {
 
   clearTimeout(STATE.fallTimer);
   clearTimeout(ttsResumeTimer);
+  releaseWakeLock();
   if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   const bubble = document.getElementById('wordBubble');
@@ -3525,6 +3613,7 @@ function completeCustomGame() {
   STATE.listeningEnabled = false;
   clearTimeout(STATE.fallTimer);
   clearTimeout(ttsResumeTimer);
+  releaseWakeLock();
   if (window.speechSynthesis) window.speechSynthesis.cancel();
   stopRecognition();
   document.getElementById('listenHud').style.display = 'none';
@@ -3831,11 +3920,10 @@ function speakWord(text) {
     return;
   }
   try {
-    // Mute recognition for the duration of TTS + buffer
+    // Keep recognition running for lower latency, but ignore results while TTS is speaking.
     STATE.listeningEnabled = false;
     clearTimeout(ttsResumeTimer);
-    suppressRecognitionRestart = true;
-    stopRecognition();
+    suppressRecognitionRestart = false;
     window.speechSynthesis.cancel();
 
     const utter = new SpeechSynthesisUtterance(text);
@@ -4625,6 +4713,32 @@ function showToast(msg, duration = 2200) {
   toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
+let wakeLockSentinel = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator) || document.hidden) return;
+  try {
+    if (wakeLockSentinel) return;
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => {
+      wakeLockSentinel = null;
+    });
+  } catch (error) {
+    console.log('[SpeechRocket] Wake lock unavailable:', error);
+  }
+}
+
+async function releaseWakeLock() {
+  if (!wakeLockSentinel) return;
+  try {
+    await wakeLockSentinel.release();
+  } catch (error) {
+    console.log('[SpeechRocket] Wake lock release error:', error);
+  } finally {
+    wakeLockSentinel = null;
+  }
+}
+
 function isEmbeddedApp() {
   const ua = (window.navigator.userAgent || '').toLowerCase();
   const indicators = [
@@ -4879,8 +4993,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle page visibility (pause/resume recognition)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && STATE.isPlaying) {
-      // Don't stop recognition but log
       console.log('[SpeechRocket] Page hidden during gameplay');
+      releaseWakeLock();
+    } else if (!document.hidden && STATE.isPlaying) {
+      requestWakeLock();
     }
   });
 
