@@ -336,6 +336,21 @@ html, body {
 .hud-btn--advanced { border-color: rgba(100,181,246,0.4); color: #90CAF9; }
 .hud-btn--restart { border-color: rgba(255,107,53,0.4); color: #FF8F00; }
 .hud-btn--pause { border-color: rgba(255,255,255,0.35); color: #fff; }
+.hud-btn--settings { border-color: rgba(255,193,7,0.45); color: var(--accent2); }
+.hud-btn--icon {
+  width: 38px;
+  min-width: 38px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+.hud-btn-icon {
+  display: inline-block;
+  transform: translateY(-1px);
+}
 
 .word-area {
   position: absolute; inset: 0;
@@ -1261,6 +1276,301 @@ textarea.donation-msg {
   color: rgba(255,255,255,0.45); font-size: 12px;
   max-width: 300px; line-height: 1.4;
 }
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS & CUSTOM CONTENT
+═══════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(5, 12, 36, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  max-height: min(92vh, 820px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(13,27,75,0.96) 0%, rgba(21,101,192,0.95) 100%);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.modal-title {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+}
+.modal-close {
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.72);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.settings-group + .settings-group {
+  margin-top: 18px;
+}
+.settings-label {
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.settings-help {
+  color: rgba(255,255,255,0.58);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+.settings-number {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  outline: none;
+}
+.settings-number:focus,
+.settings-textarea:focus {
+  border-color: rgba(255,193,7,0.62);
+  box-shadow: 0 0 0 3px rgba(255,193,7,0.14);
+}
+.settings-segmented {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.settings-chip {
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.82);
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.settings-chip:active {
+  transform: scale(0.97);
+}
+.settings-chip.active {
+  background: linear-gradient(135deg, rgba(255,107,53,0.92), rgba(255,143,0,0.92));
+  color: #fff;
+  border-color: transparent;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.settings-row-title {
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+}
+.settings-row-sub {
+  color: rgba(255,255,255,0.56);
+  font-size: 12px;
+  margin-top: 3px;
+}
+.settings-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.btn-inline {
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.btn-inline:active {
+  transform: scale(0.98);
+}
+.btn-inline--accent {
+  background: linear-gradient(135deg, #FF6B35, #FF8F00);
+  border: none;
+}
+.settings-status {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.82);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.settings-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.settings-action-btn {
+  border-radius: 14px;
+  padding: 13px 10px;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.settings-action-btn--apply {
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+}
+.settings-action-btn--restore {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.settings-action-btn--close {
+  background: transparent;
+  color: rgba(255,255,255,0.68);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.settings-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: var(--font-body);
+  outline: none;
+}
+.settings-counter {
+  margin-top: 8px;
+  color: rgba(255,255,255,0.56);
+  font-size: 12px;
+}
+.settings-share-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,193,7,0.12), rgba(255,107,53,0.14));
+  border: 1px solid rgba(255,193,7,0.28);
+}
+.settings-share-title {
+  color: #fff;
+  font-weight: 900;
+  font-size: 15px;
+}
+.settings-share-sub {
+  margin-top: 5px;
+  color: rgba(255,255,255,0.66);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.settings-share-actions {
+  margin-top: 12px;
+}
+.settings-warning {
+  margin-top: 10px;
+  color: #FFD54F;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.victory-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: radial-gradient(circle at 50% 35%, rgba(255,193,7,0.24), rgba(13,27,75,0.92) 60%);
+}
+.victory-overlay.show {
+  display: flex;
+}
+.victory-card {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  background: rgba(13,27,75,0.9);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 24px;
+  padding: 28px 22px 22px;
+  box-shadow: var(--shadow);
+}
+.victory-badge {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+.victory-title {
+  color: var(--accent2);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+}
+.victory-text {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.5;
+  font-size: 14px;
+}
+.victory-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+}
+.victory-actions button {
+  flex: 1;
+}
+
+@media (max-width: 420px) {
+  .settings-actions {
+    grid-template-columns: 1fr;
+  }
+  .victory-actions {
+    flex-direction: column;
+  }
+}
 </style>
 </head>
 <body>
@@ -1382,8 +1692,13 @@ textarea.donation-msg {
     </div>
     <div class="hud-buttons">
       <button class="hud-btn hud-btn--advanced" id="advancedBtn" onclick="skipToFullPhrases()">Advanced</button>
-      <button class="hud-btn hud-btn--restart" onclick="restartGame()">Restart</button>
+      <button class="hud-btn hud-btn--restart hud-btn--icon" onclick="restartGame()" title="Restart">
+        <span class="hud-btn-icon">&#10227;</span>
+      </button>
       <button class="hud-btn hud-btn--pause" id="pauseBtn" onclick="togglePause()" title="Pause / Resume">&#9208;</button>
+      <button class="hud-btn hud-btn--settings hud-btn--icon" id="settingsBtn" onclick="openSettingsMenu()" title="Settings">
+        <span class="hud-btn-icon">&#9881;</span>
+      </button>
     </div>
   </div>
 
@@ -1462,6 +1777,18 @@ textarea.donation-msg {
       </svg>
     </div>
     <div class="rocket-label">repeat the words correctly</div>
+  </div>
+
+  <div class="victory-overlay" id="victoryOverlay">
+    <div class="victory-card">
+      <div class="victory-badge">🏆</div>
+      <div class="victory-title">Custom Mission Complete</div>
+      <div class="victory-text" id="victoryText">You pronounced the whole custom sequence in order.</div>
+      <div class="victory-actions">
+        <button class="btn-primary" id="victoryReplayBtn">Play again</button>
+        <button class="btn-secondary" id="victoryCloseBtn">Close</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1651,15 +1978,95 @@ textarea.donation-msg {
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Game Settings</div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-label">Initial Speed</div>
+      <div class="settings-segmented" id="settingsInitialSpeedChips">
+        <button class="settings-chip" type="button" data-value="6.0">Fast</button>
+        <button class="settings-chip" type="button" data-value="8.5">Normal</button>
+        <button class="settings-chip" type="button" data-value="11.0">Easy</button>
+      </div>
+      <input class="settings-number" id="settingsInitialSpeed" type="hidden">
+      <div class="settings-help">Time in seconds for a new target to fall before it reaches the rocket.</div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-label">Acceleration</div>
+      <div class="settings-segmented" id="settingsAccelerationChips">
+        <button class="settings-chip" type="button" data-value="0.5">Soft</button>
+        <button class="settings-chip" type="button" data-value="1.5">Normal</button>
+        <button class="settings-chip" type="button" data-value="2.0">Strong</button>
+      </div>
+      <input class="settings-number" id="settingsAcceleration" type="hidden">
+      <div class="settings-help">How many seconds faster the game becomes after each correct answer.</div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-title">Custom Content</div>
+          <div class="settings-row-sub" id="customContentSummary">Set your custom words or story.</div>
+        </div>
+        <button class="btn-inline btn-inline--accent" id="openCustomContentBtn" type="button">Open</button>
+      </div>
+    </div>
+
+    <div class="settings-share-panel">
+      <div class="settings-share-title">Share Your Custom Game</div>
+      <div class="settings-share-sub" id="settingsShareSummary">Copy a link with the current settings and optional custom content.</div>
+      <div class="settings-share-actions">
+        <button class="btn-inline btn-inline--accent" id="shareCustomGameBtn" type="button">Copy share link</button>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="settings-action-btn settings-action-btn--apply" id="settingsApplyBtn" type="button">Apply</button>
+      <button class="settings-action-btn settings-action-btn--restore" id="settingsRestoreBtn" type="button">Restore</button>
+      <button class="settings-action-btn settings-action-btn--close" id="settingsCloseBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="customContentModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Custom Content</div>
+      <button class="modal-close" id="customContentCloseX" type="button">&times;</button>
+    </div>
+    <div class="settings-help">Enter between 50 and 1000 characters. The game keeps only English words in the same order.</div>
+    <textarea class="settings-textarea" id="customContentInput" maxlength="1000" placeholder="Type custom English content here..."></textarea>
+    <div class="settings-counter" id="customContentCounter">0 / 1000 characters</div>
+    <div class="settings-warning" id="customContentWarning"></div>
+    <div class="settings-inline-actions">
+      <button class="btn-inline btn-inline--accent" id="customContentSaveBtn" type="button">Save content</button>
+      <button class="btn-inline" id="customContentCancelBtn" type="button">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://allpay.to/js/allpay-hf.js"></script>
 <script>
 /* ═════════════════════════════════════════════════════════════════════
    SECTION 1: GAME CONFIGURATION
    All game parameters are here for easy tuning.
 ═════════════════════════════════════════════════════════════════════ */
+const URL_PARAMS = new URLSearchParams(window.location.search);
+const SETTINGS_STORAGE_KEY = 'srGameSettingsV1';
+const USER_LOG_ID_STORAGE_KEY = 'srUserLogId';
+const DEFAULT_GAME_SETTINGS = Object.freeze({
+  initialSpeedSec: 8.5,
+  accelerationSec: 1.5,
+  customContent: ''
+});
+
 const CONFIG = {
   recognition_debug_mode: ['1', 'true', 'yes'].includes(
-    new URLSearchParams(window.location.search).get('recognition_debug_mode')
+    URL_PARAMS.get('recognition_debug_mode')
   ),
 
   // Accuracy thresholds (0–100)
@@ -1856,6 +2263,11 @@ const STATE = {
   paused: false,
   fallStartedAt: 0,        // timestamp when fallTimer was started — used to calc remaining time on resume
   fallTimeRemaining: 0,    // ms remaining on fallTimer when paused
+  settings: null,
+  pendingSettings: null,
+  userLogId: '',
+  settingsWasPlaying: false,
+  customVictory: false,
 };
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -1914,6 +2326,234 @@ function buildSequence() {
   }
 
   return seq;
+}
+
+function sanitizeCustomContent(rawText) {
+  return (rawText.match(/[A-Za-z]+/g) || []).join(' ').trim();
+}
+
+function buildCustomSequence(rawText) {
+  const words = sanitizeCustomContent(rawText).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+
+  const seq = [];
+  const singlesEnd = Math.min(words.length, CONFIG.SINGLES_COUNT);
+  for (let i = 0; i < singlesEnd; i++) {
+    seq.push(words[i]);
+  }
+
+  const pairsEnd = Math.min(words.length, CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT * 2);
+  for (let i = CONFIG.SINGLES_COUNT; i < pairsEnd; i += 2) {
+    seq.push(words.slice(i, Math.min(i + 2, pairsEnd)).join(' '));
+  }
+
+  for (let i = pairsEnd; i < words.length; i += 3) {
+    seq.push(words.slice(i, Math.min(i + 3, words.length)).join(' '));
+  }
+
+  return seq;
+}
+
+function getDefaultSettings() {
+  return { ...DEFAULT_GAME_SETTINGS };
+}
+
+function normalizeSettings(input = {}) {
+  const base = getDefaultSettings();
+  const initialSpeedSec = Number(input.initialSpeedSec);
+  const accelerationSec = Number(input.accelerationSec);
+  const rawCustomContent = typeof input.customContent === 'string' ? input.customContent : '';
+
+  base.initialSpeedSec = Number.isFinite(initialSpeedSec)
+    ? Math.min(20, Math.max(2, Number(initialSpeedSec.toFixed(1))))
+    : DEFAULT_GAME_SETTINGS.initialSpeedSec;
+  base.accelerationSec = Number.isFinite(accelerationSec)
+    ? Math.min(5, Math.max(0, Number(accelerationSec.toFixed(1))))
+    : DEFAULT_GAME_SETTINGS.accelerationSec;
+  base.customContent = rawCustomContent.slice(0, 1000).trim();
+  return base;
+}
+
+function validateCustomContent(rawText) {
+  const trimmed = (rawText || '').trim();
+  if (!trimmed) {
+    return { valid: true, message: '', sanitized: '', words: [] };
+  }
+  if (trimmed.length <= 50) {
+    return { valid: false, message: 'Custom content must be more than 50 characters long.', sanitized: '', words: [] };
+  }
+  if (trimmed.length >= 1000) {
+    return { valid: false, message: 'Custom content must stay below 1000 characters.', sanitized: '', words: [] };
+  }
+  const sanitized = sanitizeCustomContent(trimmed);
+  const words = sanitized ? sanitized.split(/\s+/).filter(Boolean) : [];
+  if (!words.length) {
+    return { valid: false, message: 'We could not find English words in that content.', sanitized: '', words: [] };
+  }
+  return { valid: true, message: '', sanitized, words };
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
+
+function loadStoredSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return getDefaultSettings();
+    return normalizeSettings(JSON.parse(raw));
+  } catch (error) {
+    return getDefaultSettings();
+  }
+}
+
+function getOrCreateUserLogId() {
+  const existing = localStorage.getItem(USER_LOG_ID_STORAGE_KEY);
+  if (existing) return existing;
+  const generated = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `sr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  localStorage.setItem(USER_LOG_ID_STORAGE_KEY, generated);
+  return generated;
+}
+
+function getShareableSettingsUrl(settings = STATE.settings) {
+  const normalized = normalizeSettings(settings || getDefaultSettings());
+  const params = new URLSearchParams();
+  params.set('user_log_id', STATE.userLogId || getOrCreateUserLogId());
+  params.set('initial_speed', normalized.initialSpeedSec.toFixed(1));
+  params.set('acceleration', normalized.accelerationSec.toFixed(1));
+  if (normalized.customContent.trim()) {
+    params.set('custom_content', normalized.customContent.trim());
+  }
+  if (CONFIG.recognition_debug_mode) {
+    params.set('recognition_debug_mode', '1');
+  }
+  return `${CONFIG.GAME_URL}?${params.toString()}`;
+}
+
+function loadSettingsFromUrl() {
+  const fromStorage = loadStoredSettings();
+  const fromUrl = {};
+  let hasOverride = false;
+
+  if (URL_PARAMS.has('initial_speed')) {
+    fromUrl.initialSpeedSec = parseFloat(URL_PARAMS.get('initial_speed'));
+    hasOverride = true;
+  }
+  if (URL_PARAMS.has('acceleration')) {
+    fromUrl.accelerationSec = parseFloat(URL_PARAMS.get('acceleration'));
+    hasOverride = true;
+  }
+  if (URL_PARAMS.has('custom_content')) {
+    fromUrl.customContent = URL_PARAMS.get('custom_content') || '';
+    hasOverride = true;
+  }
+
+  return hasOverride ? normalizeSettings({ ...fromStorage, ...fromUrl }) : fromStorage;
+}
+
+function applySettingsState(settings) {
+  const normalized = normalizeSettings(settings);
+  const customValidation = validateCustomContent(normalized.customContent);
+  if (!customValidation.valid) {
+    normalized.customContent = '';
+  }
+  STATE.settings = normalized;
+  STATE.pendingSettings = { ...normalized };
+  saveSettings(normalized);
+  syncSettingsForm();
+  syncShareUi();
+}
+
+function syncShareUi() {
+  const shareUrl = getShareableSettingsUrl();
+  const shareInput = document.getElementById('shareInput');
+  if (shareInput) shareInput.value = shareUrl;
+  const summary = document.getElementById('settingsShareSummary');
+  if (summary) {
+    summary.textContent = STATE.settings?.customContent?.trim()
+      ? 'Includes current speed, acceleration, cleaned custom content, and your user_log_id.'
+      : 'Includes current speed, acceleration, and your user_log_id.';
+  }
+}
+
+function syncSettingsForm() {
+  const settings = STATE.pendingSettings || STATE.settings || getDefaultSettings();
+  const initialSpeedInput = document.getElementById('settingsInitialSpeed');
+  const accelerationInput = document.getElementById('settingsAcceleration');
+  if (initialSpeedInput) initialSpeedInput.value = settings.initialSpeedSec.toFixed(1);
+  if (accelerationInput) accelerationInput.value = settings.accelerationSec.toFixed(1);
+  document.getElementById('customContentInput').value = settings.customContent || '';
+  updateCustomContentUi(settings.customContent || '');
+  updateCustomContentSummary(settings.customContent || '');
+  syncSettingsChipSelection('settingsInitialSpeedChips', settings.initialSpeedSec);
+  syncSettingsChipSelection('settingsAccelerationChips', settings.accelerationSec);
+}
+
+function getSettingsFromForm() {
+  return normalizeSettings({
+    initialSpeedSec: parseFloat(document.getElementById('settingsInitialSpeed').value),
+    accelerationSec: parseFloat(document.getElementById('settingsAcceleration').value),
+    customContent: document.getElementById('customContentInput').value
+  });
+}
+
+function updateCustomContentSummary(rawText) {
+  const summary = document.getElementById('customContentSummary');
+  const validation = validateCustomContent(rawText);
+  if (!rawText.trim()) {
+    summary.textContent = 'Set your custom words or story.';
+    return;
+  }
+  if (!validation.valid) {
+    summary.textContent = validation.message;
+    return;
+  }
+  summary.textContent = `${validation.words.length} English words loaded. Singles -> pairs -> triples in order.`;
+}
+
+function updateCustomContentUi(rawText) {
+  const counter = document.getElementById('customContentCounter');
+  const warning = document.getElementById('customContentWarning');
+  const saveBtn = document.getElementById('customContentSaveBtn');
+  const text = rawText || '';
+  const validation = validateCustomContent(text);
+  counter.textContent = `${text.length} / 1000 characters`;
+  if (!text.trim()) {
+    warning.textContent = '';
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = '1';
+    return;
+  }
+  warning.textContent = validation.valid ? '' : validation.message;
+  saveBtn.disabled = !validation.valid;
+  saveBtn.style.opacity = validation.valid ? '1' : '0.55';
+}
+
+function restartGameWithCurrentSettings() {
+  cancelCurrentWord();
+  STATE.isPlaying = false;
+  STATE.paused = false;
+  hideVictoryOverlay();
+  updateRecognitionDebugStatus('System stopped recording');
+  stopRecognition();
+  document.getElementById('rocketWrapper').classList.remove('rocket-crash');
+  document.getElementById('advancedBtn').style.display = STATE.settings.customContent.trim() ? 'none' : '';
+  document.getElementById('pauseBtn').innerHTML = '&#9208;';
+  startGame();
+}
+
+function stopCustomContentDictation() {
+}
+
+function syncSettingsChipSelection(groupId, numericValue) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  const target = Number(numericValue).toFixed(1);
+  group.querySelectorAll('.settings-chip').forEach((chip) => {
+    chip.classList.toggle('active', Number(chip.dataset.value).toFixed(1) === target);
+  });
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -2150,26 +2790,29 @@ function requestMicAndStart() {
 }
 
 function startGame() {
-  STATE.sequence = buildSequence();
+  const hasCustomContent = !!STATE.settings?.customContent?.trim();
+  STATE.sequence = hasCustomContent ? buildCustomSequence(STATE.settings.customContent) : buildSequence();
   STATE.seqIndex = 0;
   STATE.correctCount = 0;
   STATE.meters = 0;
   STATE.accuracySum = 0;
   STATE.accuracyCount = 0;
-  STATE.fallDuration = CONFIG.FALL_DURATION_INITIAL;
+  STATE.fallDuration = Math.round((STATE.settings?.initialSpeedSec || DEFAULT_GAME_SETTINGS.initialSpeedSec) * 1000);
   STATE.cloudDuration = CONFIG.CLOUD_DURATION_INITIAL;
   STATE.isPlaying = true;
   STATE.wordActive = false;
   STATE.wordCorrect = false;
   STATE.listeningEnabled = false;
   STATE.paused = false;
+  STATE.customVictory = false;
   clearTimeout(ttsResumeTimer);
   if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   // Reset UI controls
-  document.getElementById('advancedBtn').style.display = '';
+  document.getElementById('advancedBtn').style.display = hasCustomContent ? 'none' : '';
   document.getElementById('pauseBtn').innerHTML = '&#9208;';
   document.getElementById('rocketWrapper').classList.remove('rocket-crash');
+  hideVictoryOverlay();
   STATE.sessionStart = Date.now();
   STATE.attempts++;
   resetRecognitionDebug();
@@ -2191,6 +2834,10 @@ function startGame() {
 function nextWord() {
   if (!STATE.isPlaying || STATE.paused) return;
   if (STATE.seqIndex >= STATE.sequence.length) {
+    if (STATE.settings?.customContent?.trim()) {
+      completeCustomGame();
+      return;
+    }
     STATE.sequence = [...STATE.sequence, ...buildSequence()];
   }
   const word = STATE.sequence[STATE.seqIndex];
@@ -2263,17 +2910,17 @@ function wordCorrect(accuracy) {
 
   // Tier transition speed resets
   const prevCount = STATE.correctCount - 1;
-  if (prevCount < CONFIG.SINGLES_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT) {
+  if (!STATE.settings?.customContent?.trim() && prevCount < CONFIG.SINGLES_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT) {
     // Entering pairs tier — slow down for harder content
     STATE.fallDuration = CONFIG.FALL_DURATION_PAIRS_RESET;
-  } else if (prevCount < CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT) {
+  } else if (!STATE.settings?.customContent?.trim() && prevCount < CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT && STATE.correctCount >= CONFIG.SINGLES_COUNT + CONFIG.PAIRS_COUNT) {
     // Entering full phrases tier — slow down for harder content
     STATE.fallDuration = CONFIG.FALL_DURATION_FULL_RESET;
   } else {
     // Normal acceleration within a tier
     STATE.fallDuration = Math.max(
       CONFIG.FALL_DURATION_MIN,
-      STATE.fallDuration - CONFIG.FALL_DURATION_DECREASE
+      STATE.fallDuration - Math.round((STATE.settings?.accelerationSec || DEFAULT_GAME_SETTINGS.accelerationSec) * 1000)
     );
   }
 
@@ -2298,7 +2945,13 @@ function wordCorrect(accuracy) {
   setTimeout(() => {
     bubble.style.display = 'none';
     document.getElementById('listenHud').style.display = 'none';
-    if (STATE.isPlaying) setTimeout(nextWord, 300);
+    if (STATE.isPlaying) {
+      if (STATE.settings?.customContent?.trim() && STATE.seqIndex >= STATE.sequence.length) {
+        completeCustomGame();
+      } else {
+        setTimeout(nextWord, 300);
+      }
+    }
   }, 700);
 }
 
@@ -2411,17 +3064,7 @@ function skipToFullPhrases() {
 }
 
 function restartGame() {
-  cancelCurrentWord();
-  STATE.isPlaying = false;
-  STATE.paused = false;
-  updateRecognitionDebugStatus('System stopped recording');
-  stopRecognition();
-
-  document.getElementById('rocketWrapper').classList.remove('rocket-crash');
-  document.getElementById('advancedBtn').style.display = '';
-  document.getElementById('pauseBtn').innerHTML = '&#9208;';
-
-  startGame();
+  restartGameWithCurrentSettings();
 }
 
 function togglePause() {
@@ -2507,6 +3150,156 @@ function showAccuracyBadge(pct) {
   badge.className = 'accuracy-badge show';
   badge.style.color = pct >= 80 ? '#69F0AE' : pct >= 60 ? '#FFC107' : '#FF5252';
   setTimeout(() => { badge.className = 'accuracy-badge'; }, 1200);
+}
+
+function playVictorySound() {
+  try {
+    const ctx = getAudioCtx();
+    [523, 659, 784, 1046].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.type = 'triangle';
+      const t = ctx.currentTime + i * 0.1;
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.55);
+      osc.start(t);
+      osc.stop(t + 0.6);
+    });
+  } catch (error) {}
+}
+
+function showVictoryOverlay() {
+  document.getElementById('victoryText').textContent = `You completed ${STATE.correctCount} custom target${STATE.correctCount === 1 ? '' : 's'} and finished the whole shared mission.`;
+  document.getElementById('victoryOverlay').classList.add('show');
+}
+
+function hideVictoryOverlay() {
+  document.getElementById('victoryOverlay').classList.remove('show');
+}
+
+function completeCustomGame() {
+  if (!STATE.isPlaying || STATE.customVictory) return;
+  STATE.customVictory = true;
+  STATE.isPlaying = false;
+  STATE.wordActive = false;
+  STATE.listeningEnabled = false;
+  clearTimeout(STATE.fallTimer);
+  clearTimeout(ttsResumeTimer);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  stopRecognition();
+  document.getElementById('listenHud').style.display = 'none';
+  document.getElementById('pauseBtn').innerHTML = '&#9208;';
+  playVictorySound();
+  showVictoryOverlay();
+  gaEvent('custom_game_complete', {
+    correct_targets: STATE.correctCount,
+    meters: STATE.meters,
+    user_log_id: STATE.userLogId
+  });
+}
+
+function openSettingsMenu() {
+  stopCustomContentDictation();
+  STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+  syncSettingsForm();
+  const modal = document.getElementById('settingsModal');
+  if (STATE.isPlaying && !STATE.paused) {
+    STATE.settingsWasPlaying = true;
+    togglePause();
+  } else {
+    STATE.settingsWasPlaying = false;
+  }
+  modal.classList.add('show');
+}
+
+function closeSettingsMenu({ resumeGame = true } = {}) {
+  stopCustomContentDictation();
+  document.getElementById('customContentModal').classList.remove('show');
+  document.getElementById('settingsModal').classList.remove('show');
+  if (resumeGame && STATE.settingsWasPlaying && STATE.isPlaying && STATE.paused) {
+    togglePause();
+  }
+  STATE.settingsWasPlaying = false;
+}
+
+function openCustomContentWindow() {
+  const textarea = document.getElementById('customContentInput');
+  textarea.dataset.savedValue = textarea.value;
+  document.getElementById('customContentModal').classList.add('show');
+  updateCustomContentUi(textarea.value);
+}
+
+function closeCustomContentWindow({ restoreDraft = false } = {}) {
+  stopCustomContentDictation();
+  const textarea = document.getElementById('customContentInput');
+  if (restoreDraft) {
+    const previous = textarea.dataset.savedValue || (STATE.pendingSettings?.customContent || '');
+    textarea.value = previous;
+    if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+    STATE.pendingSettings.customContent = previous;
+    updateCustomContentUi(previous);
+    updateCustomContentSummary(previous);
+  }
+  document.getElementById('customContentModal').classList.remove('show');
+}
+
+function saveCustomContentDraft() {
+  const textarea = document.getElementById('customContentInput');
+  const value = textarea.value;
+  const validation = validateCustomContent(value);
+  if (!validation.valid) {
+    updateCustomContentUi(value);
+    return;
+  }
+  const cleaned = value.trim();
+  textarea.value = cleaned;
+  if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+  STATE.pendingSettings.customContent = cleaned;
+  updateCustomContentUi(cleaned);
+  updateCustomContentSummary(cleaned);
+  closeCustomContentWindow({ restoreDraft: false });
+}
+
+function applySettingsAndRestart() {
+  const nextSettings = getSettingsFromForm();
+  const validation = validateCustomContent(nextSettings.customContent);
+  if (!validation.valid) {
+    openCustomContentWindow();
+    updateCustomContentUi(nextSettings.customContent);
+    return;
+  }
+  applySettingsState(nextSettings);
+  closeSettingsMenu({ resumeGame: false });
+  restartGameWithCurrentSettings();
+  showToast('Settings applied');
+}
+
+function restoreDefaultSettingsAndRestart() {
+  applySettingsState(getDefaultSettings());
+  closeSettingsMenu({ resumeGame: false });
+  restartGameWithCurrentSettings();
+  showToast('Default settings restored');
+}
+
+function shareCustomGame() {
+  const nextSettings = getSettingsFromForm();
+  const validation = validateCustomContent(nextSettings.customContent);
+  if (!validation.valid) {
+    openCustomContentWindow();
+    updateCustomContentUi(nextSettings.customContent);
+    return;
+  }
+  const url = getShareableSettingsUrl(nextSettings);
+  copyToClipboard(url);
+  showToast('✓ Custom game link copied!');
+  gaEvent('custom_game_share', {
+    has_custom_content: !!nextSettings.customContent.trim(),
+    user_log_id: STATE.userLogId
+  });
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -3216,7 +4009,7 @@ function copyAddr(coin) {
 }
 
 function copyLink() {
-  copyToClipboard(CONFIG.GAME_URL);
+  copyToClipboard(getShareableSettingsUrl());
   showToast('✓ Link copied!');
   gaEvent('share_link_copy');
 }
@@ -3561,6 +4354,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load best score
   STATE.bestScore = parseInt(localStorage.getItem('srBestScore')) || 0;
+  STATE.userLogId = getOrCreateUserLogId();
+  applySettingsState(loadSettingsFromUrl());
 
   // Random player count, updates slowly
   function randomizePlayers() {
@@ -3624,6 +4419,49 @@ document.addEventListener('DOMContentLoaded', () => {
     showPage('page-result');
   });
 
+  document.getElementById('settingsCloseBtn').addEventListener('click', () => closeSettingsMenu());
+  document.getElementById('settingsApplyBtn').addEventListener('click', applySettingsAndRestart);
+  document.getElementById('settingsRestoreBtn').addEventListener('click', restoreDefaultSettingsAndRestart);
+  document.getElementById('openCustomContentBtn').addEventListener('click', openCustomContentWindow);
+  document.getElementById('shareCustomGameBtn').addEventListener('click', shareCustomGame);
+
+  document.getElementById('customContentCloseX').addEventListener('click', () => closeCustomContentWindow({ restoreDraft: true }));
+  document.getElementById('customContentSaveBtn').addEventListener('click', saveCustomContentDraft);
+  document.getElementById('customContentCancelBtn').addEventListener('click', () => closeCustomContentWindow({ restoreDraft: true }));
+  document.getElementById('customContentInput').addEventListener('input', (event) => {
+    if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+    STATE.pendingSettings.customContent = event.target.value;
+    updateCustomContentUi(event.target.value);
+    updateCustomContentSummary(event.target.value);
+  });
+
+  document.getElementById('settingsInitialSpeedChips').querySelectorAll('.settings-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+      const value = parseFloat(chip.dataset.value);
+      STATE.pendingSettings.initialSpeedSec = value;
+      document.getElementById('settingsInitialSpeed').value = value.toFixed(1);
+      syncSettingsChipSelection('settingsInitialSpeedChips', value);
+    });
+  });
+  document.getElementById('settingsAccelerationChips').querySelectorAll('.settings-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      if (!STATE.pendingSettings) STATE.pendingSettings = { ...(STATE.settings || getDefaultSettings()) };
+      const value = parseFloat(chip.dataset.value);
+      STATE.pendingSettings.accelerationSec = value;
+      document.getElementById('settingsAcceleration').value = value.toFixed(1);
+      syncSettingsChipSelection('settingsAccelerationChips', value);
+    });
+  });
+
+  document.getElementById('victoryReplayBtn').addEventListener('click', () => {
+    restartGameWithCurrentSettings();
+  });
+  document.getElementById('victoryCloseBtn').addEventListener('click', () => {
+    hideVictoryOverlay();
+    showPage('page-start');
+  });
+
   // Auto-stretch textarea for feature request
   const donationMsg = document.getElementById('donationMsg');
   if (donationMsg) {
@@ -3637,6 +4475,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Track time on start page
   STATE.pageOpenTimes['page-start'] = Date.now();
   gaEvent('page_view', { page: 'start' });
+  syncShareUi();
 
   // Handle page visibility (pause/resume recognition)
   document.addEventListener('visibilitychange', () => {
