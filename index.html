@@ -1972,14 +1972,6 @@ textarea.donation-msg {
         Help us & request feature
         <span class="btn-label-small">Unlock supporter achievement</span>
       </button>
-      <button class="btn-boost action-card-btn" id="resultBoostBtn">
-        Boost your language with our AI assistant
-        <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
-      </button>
-      <button class="btn-boost action-card-btn" id="resultTutorShareBtn">
-        For tutors: share custom game with your learners
-        <span class="btn-label-small">Build a lesson-specific challenge and send one share link</span>
-      </button>
     </div>
   </div>
 </div>
@@ -2002,10 +1994,6 @@ textarea.donation-msg {
     </div>
     <div class="lb-next-badge" id="lbNextBadge"></div>
     <button class="btn-primary" id="newFlightBtn">Start new flight 🚀</button>
-    <button class="btn-secondary action-card-btn" id="leaderboardHelpBtn">
-      Help us & request feature
-      <span class="btn-label-small">Unlock supporter achievement</span>
-    </button>
     <button class="btn-boost action-card-btn" id="leaderboardBoostBtn">
       Boost your language with our AI assistant
       <span class="btn-label-small">Dialogs &amp; Games for 40+ languages</span>
@@ -2284,7 +2272,7 @@ const USER_LOG_ID_STORAGE_KEY = 'srUserLogId';
 const SUPPORTER_STORAGE_KEY = 'srSupporterAchievement';
 const DEFAULT_GAME_SETTINGS = Object.freeze({
   initialSpeedSec: 11.0,
-  accelerationSec: 1.5,
+  accelerationSec: 1.0,
   customContent: ''
 });
 
@@ -3203,11 +3191,6 @@ function startRecognition() {
   }
 }
 
-function isChromiumSpeechBrowser() {
-  const ua = navigator.userAgent;
-  return /Chrome|CriOS|Edg|OPR/i.test(ua) && !/Safari\/.*Version\//i.test(ua);
-}
-
 function stopRecognition() {
   if (recognition && recActive) {
     try { recognition.stop(); }
@@ -3215,12 +3198,16 @@ function stopRecognition() {
   }
 }
 
+function shouldAbortRecognitionForTts() {
+  return !isAppleWebKitTTS();
+}
+
 function muteRecognitionForTts() {
   STATE.listeningEnabled = false;
   suppressRecognitionRestart = true;
-  if (!recognition || !recActive) return;
+  if (!recognition) return;
   try {
-    if (isChromiumSpeechBrowser() && typeof recognition.abort === 'function') {
+    if (shouldAbortRecognitionForTts() && typeof recognition.abort === 'function') {
       recognition.abort();
     } else {
       recognition.stop();
@@ -5133,12 +5120,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('resultHelpBtn').addEventListener('click', () => {
     openSupportPage('result');
-  });
-  document.getElementById('resultBoostBtn').addEventListener('click', openInream);
-  document.getElementById('resultTutorShareBtn').addEventListener('click', openTutorShareFlow);
-
-  document.getElementById('leaderboardHelpBtn').addEventListener('click', () => {
-    openSupportPage('leaderboard');
   });
   document.getElementById('leaderboardBoostBtn').addEventListener('click', openInream);
   document.getElementById('leaderboardTutorShareBtn').addEventListener('click', openTutorShareFlow);
