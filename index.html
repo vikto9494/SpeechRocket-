@@ -323,6 +323,14 @@ html, body {
   letter-spacing: 0.5px;
 }
 .words-display span { color: var(--success); }
+.lives-display {
+  font-family: var(--font-display);
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 700;
+  color: rgba(255,255,255,0.78);
+  letter-spacing: 0.5px;
+}
+.lives-display span { color: #FF8A80; }
 .hud-buttons {
   display: flex; gap: 6px;
 }
@@ -1821,6 +1829,7 @@ textarea.donation-msg {
     <div class="hud-stats">
       <div class="meter-display"><span id="metersDisplay">0</span> m</div>
       <div class="words-display">Words: <span id="wordsDisplay">0</span></div>
+      <div class="lives-display">Lives: <span id="livesDisplay">3</span></div>
     </div>
     <div class="hud-buttons">
       <button class="hud-btn hud-btn--advanced" id="advancedBtn" onclick="skipToFullPhrases()">Advanced</button>
@@ -2308,6 +2317,7 @@ const CONFIG = {
 
   // Scoring
   METERS_PER_WORD: 300,            // meters per correctly spoken word
+  PLAYER_LIVES: 3,                 // misses allowed before game over
 
   // Fake player count range (shown on start screen)
   FAKE_PLAYERS_MIN: 300,
@@ -2517,6 +2527,7 @@ const STATE = {
   seqIndex: 0,            // current position in sequence
   correctCount: 0,        // total correctly spoken words/phrases
   meters: 0,              // current height in meters
+  lives: CONFIG.PLAYER_LIVES,
   accuracySum: 0,         // sum of accuracy scores for average
   accuracyCount: 0,       // count of accuracy readings
   fallDuration: CONFIG.FALL_DURATION_INITIAL,
@@ -3192,11 +3203,29 @@ function startRecognition() {
   }
 }
 
+function isChromiumSpeechBrowser() {
+  const ua = navigator.userAgent;
+  return /Chrome|CriOS|Edg|OPR/i.test(ua) && !/Safari\/.*Version\//i.test(ua);
+}
+
 function stopRecognition() {
   if (recognition && recActive) {
     try { recognition.stop(); }
     catch(e) {}
   }
+}
+
+function muteRecognitionForTts() {
+  STATE.listeningEnabled = false;
+  suppressRecognitionRestart = true;
+  if (!recognition || !recActive) return;
+  try {
+    if (isChromiumSpeechBrowser() && typeof recognition.abort === 'function') {
+      recognition.abort();
+    } else {
+      recognition.stop();
+    }
+  } catch(e) {}
 }
 
 function showMicOverlay({ title, text, primaryLabel = 'Allow microphone', secondaryLabel = '', showSecondary = false, onPrimary = null, onSecondary = null }) {
@@ -3313,6 +3342,7 @@ function startGame() {
   STATE.seqIndex = 0;
   STATE.correctCount = 0;
   STATE.meters = 0;
+  STATE.lives = CONFIG.PLAYER_LIVES;
   STATE.accuracySum = 0;
   STATE.accuracyCount = 0;
   STATE.fallDuration = Math.round((STATE.settings?.initialSpeedSec || DEFAULT_GAME_SETTINGS.initialSpeedSec) * 1000);
@@ -3499,16 +3529,18 @@ function wordCorrect(accuracy) {
 
 function wordMissed() {
   if (!STATE.isPlaying) return; // prevent double-trigger
-  STATE.isPlaying = false;
+  const missGeneration = ++STATE.wordGeneration;
   STATE.wordActive = false;
   STATE.listeningEnabled = false;
   STATE.paused = false;
+  STATE.lives = Math.max(0, STATE.lives - 1);
+  const hasLivesRemaining = STATE.lives > 0;
   STATE.failedWord = STATE.currentTarget;
 
   clearTimeout(STATE.fallTimer);
   clearTimeout(ttsResumeTimer);
-  releaseWakeLock();
   if (window.speechSynthesis) window.speechSynthesis.cancel();
+  updateMeterDisplay();
 
   const bubble = document.getElementById('wordBubble');
   bubble.style.animationPlayState = '';
@@ -3535,15 +3567,28 @@ function wordMissed() {
 
   document.getElementById('listenHud').style.display = 'none';
   document.getElementById('pauseBtn').innerHTML = '&#9208;';
-  updateRecognitionDebugStatus('System stopped recording');
+  updateRecognitionDebugStatus(hasLivesRemaining ? 'Life lost - preparing next word' : 'System stopped recording');
   stopRecognition();
 
-  gaEvent('speech-rocket-game-finished', {
-    'correctly-pronounced-words-before-this': STATE.correctCount,
-    score: calcScore()
-  });
+  if (!hasLivesRemaining) {
+    STATE.isPlaying = false;
+    releaseWakeLock();
+    gaEvent('speech-rocket-game-finished', {
+      'correctly-pronounced-words-before-this': STATE.correctCount,
+      score: calcScore()
+    });
+    setTimeout(() => showResultPage(), 1100);
+    return;
+  }
 
-  setTimeout(() => showResultPage(), 1100);
+  setTimeout(() => {
+    if (!STATE.isPlaying || STATE.wordGeneration !== missGeneration) return;
+    bubble.style.display = 'none';
+    bubble.className = 'word-bubble';
+    document.getElementById('rocketWrapper').classList.remove('rocket-crash');
+    startRecognition();
+    nextWord();
+  }, 1100);
 }
 
 function calcScore() {
@@ -3557,6 +3602,7 @@ function avgAccuracy() {
 function updateMeterDisplay() {
   document.getElementById('metersDisplay').textContent = STATE.meters.toLocaleString();
   document.getElementById('wordsDisplay').textContent = STATE.correctCount;
+  document.getElementById('livesDisplay').textContent = STATE.lives;
 }
 
 function cancelCurrentWord() {
@@ -4049,10 +4095,10 @@ function speakWord(text) {
     return;
   }
   try {
-    // Keep recognition running for lower latency, but ignore results while TTS is speaking.
-    STATE.listeningEnabled = false;
+    // Fully stop recognition while TTS is speaking so the engine cannot feed back
+    // the game's own prompt as a delayed transcript.
+    muteRecognitionForTts();
     clearTimeout(ttsResumeTimer);
-    suppressRecognitionRestart = false;
     window.speechSynthesis.cancel();
 
     const utter = new SpeechSynthesisUtterance(text);
@@ -4071,7 +4117,7 @@ function speakWord(text) {
 
     utter.onstart = () => {
       ttsSpeaking = true;
-      STATE.listeningEnabled = false;
+      muteRecognitionForTts();
       console.log('[SpeechRocket] 🔊 TTS started — mic muted');
     };
 
@@ -4081,7 +4127,7 @@ function speakWord(text) {
       ttsSpeaking = false;
       if (STATE.wordGeneration !== gen) return; // stale utterance
       console.log('[SpeechRocket] 🔊 TTS ended — waiting 350ms before enabling mic');
-      // Wait 350ms after TTS ends before accepting any recognition results
+      // Short post-TTS settle window before reopening the mic.
       ttsResumeTimer = setTimeout(() => {
         reopenRecognitionForPlayer(gen, 'after TTS');
       }, 350);
