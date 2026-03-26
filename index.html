@@ -2272,7 +2272,7 @@ const USER_LOG_ID_STORAGE_KEY = 'srUserLogId';
 const SUPPORTER_STORAGE_KEY = 'srSupporterAchievement';
 const DEFAULT_GAME_SETTINGS = Object.freeze({
   initialSpeedSec: 11.0,
-  accelerationSec: 1.0,
+  accelerationSec: 0.5,
   customContent: ''
 });
 
@@ -3191,6 +3191,11 @@ function startRecognition() {
   }
 }
 
+function isChromiumSpeechBrowser() {
+  const ua = navigator.userAgent;
+  return /Chrome|CriOS|Edg|OPR/i.test(ua) && !/Safari\/.*Version\//i.test(ua);
+}
+
 function stopRecognition() {
   if (recognition && recActive) {
     try { recognition.stop(); }
@@ -3198,16 +3203,12 @@ function stopRecognition() {
   }
 }
 
-function shouldAbortRecognitionForTts() {
-  return !isAppleWebKitTTS();
-}
-
 function muteRecognitionForTts() {
   STATE.listeningEnabled = false;
   suppressRecognitionRestart = true;
-  if (!recognition) return;
+  if (!recognition || !recActive) return;
   try {
-    if (shouldAbortRecognitionForTts() && typeof recognition.abort === 'function') {
+    if (isChromiumSpeechBrowser() && typeof recognition.abort === 'function') {
       recognition.abort();
     } else {
       recognition.stop();
