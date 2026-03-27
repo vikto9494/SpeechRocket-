@@ -10,11 +10,12 @@
   ║   on the title page.                                           ║
   ╚══════════════════════════════════════════════════════════════════╝
 -->
-<html lang="en">
+<html lang="en" translate="no" class="notranslate">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0d1b4b">
+  <meta name="google" content="notranslate">
   <title>Speech Rocket 🚀 | English Pronunciation Training</title>
   <link rel="icon" type="image/svg+xml" href="./speech-rocket-favicon.svg">
   <link rel="shortcut icon" href="./speech-rocket-favicon.svg">
@@ -2964,7 +2965,7 @@ function initRecognition() {
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
-  recognition.maxAlternatives = 1;
+  recognition.maxAlternatives = 3;
 
   recognition.onstart = () => {
     recActive = true;
@@ -2997,56 +2998,70 @@ function initRecognition() {
   };
 
   recognition.onresult = (e) => {
-    for (let idx = e.resultIndex; idx < e.results.length; idx++) {
-      const result = e.results[idx];
-      const topText = result[0]?.transcript || '';
-      const topConf = result[0]?.confidence || 0;
-      const isFinal = result.isFinal;
-      const debugEnabled = isRecognitionDebugEnabled();
-      const now = performance.now();
-      const shouldRefreshDebugUi = debugEnabled && (isFinal || now - lastRecognitionDebugUiAt >= 140);
+    const debugEnabled = isRecognitionDebugEnabled();
+    const now = performance.now();
+    const latestResult = e.results[e.results.length - 1];
+    const topText = latestResult?.[0]?.transcript || '';
+    const topConf = latestResult?.[0]?.confidence || 0;
+    const isFinal = Array.from(e.results).some((entry) => entry?.isFinal);
+    const shouldRefreshDebugUi = debugEnabled && (isFinal || now - lastRecognitionDebugUiAt >= 140);
 
-      if (debugEnabled) {
-        console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${topText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
-      }
+    if (debugEnabled) {
+      console.log(`[SpeechRocket] ${isFinal ? '✅ FINAL' : '🔄 interim'} "${topText}" (conf: ${topConf.toFixed(3)}) target: "${STATE.currentTarget}" listening: ${STATE.listeningEnabled}`);
+    }
 
-      // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
-      if (!STATE.listeningEnabled) {
-        if (debugEnabled) console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
-        continue;
-      }
+    // Hard gate: ignore ALL results while TTS is still speaking or in the mute window
+    if (!STATE.listeningEnabled) {
+      if (debugEnabled) console.log('[SpeechRocket] 🔇 Ignored — TTS mute window active');
+      return;
+    }
 
-      if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
-      if (shouldRefreshDebugUi) {
-        updateRecognitionDebugTranscript(topText.trim());
-      }
+    if (!STATE.isPlaying || !STATE.wordActive || STATE.wordCorrect) return;
 
-      // Check accuracy against the top alternative immediately for lower latency.
-      const debugInfo = getAccuracyDebugInfo(topText, STATE.currentTarget);
-      const accuracy = debugInfo.accuracy;
-      const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
-        ? CONFIG.ACCURACY_THRESHOLD_EARLY
-        : CONFIG.ACCURACY_THRESHOLD_NORMAL;
-      const passesThreshold = debugInfo.targetCount > 1
-        ? debugInfo.perWordScores.every((score) => score > threshold)
-        : accuracy >= threshold;
-      const accuracyMessage = `Target: ${debugInfo.targetNorm || '—'} | Spoken: ${debugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${debugInfo.matchCount}/${debugInfo.targetCount} strong) | Threshold: ${threshold}% | ${passesThreshold ? 'PASS' : 'MISS'} | ${debugInfo.scoredMatches.join(', ')}`;
-      if (shouldRefreshDebugUi) {
-        lastRecognitionDebugUiAt = now;
-        updateRecognitionDebugAccuracy(accuracyMessage);
-      }
-      if (debugEnabled && isFinal) {
-        appendRecognitionDebugLog(`FINAL | ${accuracyMessage}`);
-      }
+    const threshold = STATE.correctCount < CONFIG.EARLY_WORD_COUNT
+      ? CONFIG.ACCURACY_THRESHOLD_EARLY
+      : CONFIG.ACCURACY_THRESHOLD_NORMAL;
+    const candidates = getRecognitionCandidates(e);
+    let bestCandidate = topText.trim();
+    let bestDebugInfo = getAccuracyDebugInfo(bestCandidate, STATE.currentTarget);
+    let passedCandidate = null;
+    let passedDebugInfo = null;
 
-      if (debugEnabled) {
-        console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+    for (const candidate of candidates) {
+      const candidateDebugInfo = getAccuracyDebugInfo(candidate, STATE.currentTarget);
+      if (candidateDebugInfo.accuracy > bestDebugInfo.accuracy) {
+        bestCandidate = candidate;
+        bestDebugInfo = candidateDebugInfo;
       }
+      if (passesAccuracyThreshold(candidateDebugInfo, threshold)) {
+        if (!passedDebugInfo || candidateDebugInfo.accuracy > passedDebugInfo.accuracy) {
+          passedCandidate = candidate;
+          passedDebugInfo = candidateDebugInfo;
+        }
+      }
+    }
 
-      if (passesThreshold) {
-        wordCorrect(accuracy);
-        return;
-      }
+    const winningCandidate = passedCandidate || bestCandidate;
+    const winningDebugInfo = passedDebugInfo || bestDebugInfo;
+    const accuracy = winningDebugInfo.accuracy;
+    const didPass = !!passedDebugInfo;
+    const accuracyMessage = `Target: ${winningDebugInfo.targetNorm || '—'} | Spoken: ${winningDebugInfo.transcriptNorm || '—'} | Accuracy: ${accuracy.toFixed(1)}% (${winningDebugInfo.matchCount}/${winningDebugInfo.targetCount} strong) | Threshold: ${threshold}% | ${didPass ? 'PASS' : 'MISS'} | ${winningDebugInfo.scoredMatches.join(', ')}`;
+
+    if (shouldRefreshDebugUi) {
+      lastRecognitionDebugUiAt = now;
+      updateRecognitionDebugTranscript(winningCandidate);
+      updateRecognitionDebugAccuracy(accuracyMessage);
+    }
+    if (debugEnabled && isFinal) {
+      appendRecognitionDebugLog(`FINAL | ${accuracyMessage}`);
+    }
+
+    if (debugEnabled) {
+      console.log(`[SpeechRocket] accuracy: ${accuracy.toFixed(1)}% (threshold: ${threshold}%)`);
+    }
+
+    if (didPass) {
+      wordCorrect(accuracy);
     }
   };
 
@@ -3170,6 +3185,51 @@ function getAccuracyDebugInfo(transcript, target) {
 
 function calcAccuracy(transcript, target) {
   return getAccuracyDebugInfo(transcript, target).accuracy;
+}
+
+function passesAccuracyThreshold(debugInfo, threshold) {
+  return debugInfo.targetCount > 1
+    ? debugInfo.perWordScores.every((score) => score >= threshold)
+    : debugInfo.accuracy >= threshold;
+}
+
+function getRecognitionCandidates(event) {
+  const candidates = [];
+  const seen = new Set();
+  const pushCandidate = (value) => {
+    const text = typeof value === 'string' ? value.trim() : '';
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push(text);
+  };
+
+  const topTranscripts = [];
+  for (let resultIdx = 0; resultIdx < event.results.length; resultIdx++) {
+    const result = event.results[resultIdx];
+    if (!result) continue;
+    const topTranscript = result[0]?.transcript || '';
+    if (topTranscript) topTranscripts.push(topTranscript.trim());
+
+    const altCount = Math.min(result.length || 0, recognition?.maxAlternatives || 1);
+    for (let altIdx = 0; altIdx < altCount; altIdx++) {
+      pushCandidate(result[altIdx]?.transcript || '');
+    }
+  }
+
+  if (topTranscripts.length) {
+    pushCandidate(topTranscripts.join(' '));
+
+    // Safari can split one spoken phrase across multiple result chunks,
+    // so also score recent suffix combinations.
+    const suffixWindow = Math.min(topTranscripts.length, 4);
+    for (let start = topTranscripts.length - suffixWindow; start < topTranscripts.length; start++) {
+      pushCandidate(topTranscripts.slice(start).join(' '));
+    }
+  }
+
+  return candidates;
 }
 
 function levenshtein(a, b) {
